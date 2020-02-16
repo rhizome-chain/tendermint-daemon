@@ -3,15 +3,18 @@ package commands
 import (
 	"fmt"
 	"os"
-	
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	
-	dmlog "github.com/rhizome-chain/tendermint-daemon/tm/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
+
+	dmlog "github.com/rhizome-chain/tendermint-daemon/tm/log"
 )
 
 var (
@@ -36,7 +39,7 @@ func ParseConfig() (*cfg.Config, error) {
 		return nil, err
 	}
 	conf.SetRoot(conf.RootDir)
-	cfg.EnsureRoot(conf.RootDir)
+	EnsureRoot(conf.RootDir)
 	if err = conf.ValidateBasic(); err != nil {
 		return nil, fmt.Errorf("error in config file: %v", err)
 	}
@@ -81,4 +84,16 @@ func InitRootCommand() *cobra.Command {
 		VersionCmd,
 	)
 	return rootCmd
+}
+
+func EnsureRoot(rootDir string) {
+	if err := tmos.EnsureDir(rootDir, cfg.DefaultDirPerm); err != nil {
+		panic(err.Error())
+	}
+	if err := tmos.EnsureDir(filepath.Join(rootDir, "config"), cfg.DefaultDirPerm); err != nil {
+		panic(err.Error())
+	}
+	if err := tmos.EnsureDir(filepath.Join(rootDir, "data"), cfg.DefaultDirPerm); err != nil {
+		panic(err.Error())
+	}
 }

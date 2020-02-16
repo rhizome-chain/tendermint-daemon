@@ -2,8 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/spf13/viper"
-	
+
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -23,6 +25,7 @@ func NewInitCmd() *cobra.Command {
 		RunE:  initFiles,
 	}
 	cmd.Flags().String("chain-id", config.ChainID(), "Chain ID")
+	cmd.Flags().String("node-name", config.Moniker, "Node Name")
 	return cmd
 }
 
@@ -62,7 +65,7 @@ func initFilesWithConfig(config *cfg.Config) error {
 		logger.Info("Found genesis file", "path", genFile)
 	} else {
 		chainID := viper.GetString("chain-id")
-		
+
 		if len(chainID) == 0 {
 			chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 		}
@@ -82,6 +85,14 @@ func initFilesWithConfig(config *cfg.Config) error {
 			return err
 		}
 		logger.Info("Generated genesis file", "path", genFile)
+	}
+
+	confFilePath := filepath.Join(config.RootDir, "config", "config.toml")
+
+	if !tmos.FileExists(confFilePath) {
+		nodeName := viper.GetString("node-name")
+		config.BaseConfig.Moniker = nodeName
+		cfg.WriteConfigFile(confFilePath, config)
 	}
 
 	return nil

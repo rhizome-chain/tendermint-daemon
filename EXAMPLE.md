@@ -3,9 +3,9 @@
 
 ### Init
 ```
-TMHOME=chainroot1 go run ./examples/. init --chain-id=daemon-chain
-TMHOME=chainroot2 go run ./examples/. init --chain-id=daemon-chain
-TMHOME=chainroot3 go run ./examples/. init --chain-id=daemon-chain
+TMHOME=chainroot1 go run ./examples/. init --chain-id=daemon-chain --node-name=node1
+TMHOME=chainroot2 go run ./examples/. init --chain-id=daemon-chain --node-name=node2
+TMHOME=chainroot3 go run ./examples/. init --chain-id=daemon-chain --node-name=node3
 ```
 * In chainroot1/config/config.toml file, you should set allow_duplicate_ip true to enable to run multi nodes on the same machine
 * Copy config.toml and genesis.json and paste to chainroot2/config, chainroot3/config

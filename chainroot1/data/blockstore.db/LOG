@@ -1,0 +1,16 @@
+=============== Feb 16, 2020 (KST) ===============
+05:58:19.665295 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+05:58:19.695249 db@open opening
+05:58:19.696895 version@stat F·[] S·0B[] Sc·[]
+05:58:19.712562 db@janitor F·2 G·0
+05:58:19.712637 db@open done T·17.299999ms
+=============== Feb 16, 2020 (KST) ===============
+12:33:30.993813 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:33:30.995145 version@stat F·[] S·0B[] Sc·[]
+12:33:30.995186 db@open opening
+12:33:30.995293 journal@recovery F·1
+12:33:30.995744 journal@recovery recovering @1
+12:33:31.014577 memdb@flush created L0@2 N·511 S·74KiB ",v511":"blo..ore,v6"
+12:33:31.019799 version@stat F·[1] S·74KiB[74KiB] Sc·[0.25]
+12:33:31.082950 db@janitor F·3 G·0
+12:33:31.082996 db@open done T·87.79197ms

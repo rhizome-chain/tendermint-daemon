@@ -1,0 +1,32 @@
+{
+  "genesis_time": "2020-02-15T20:55:40.79087Z",
+  "chain_id": "daemon-chain",
+  "consensus_params": {
+    "block": {
+      "max_bytes": "22020096",
+      "max_gas": "-1",
+      "time_iota_ms": "1000"
+    },
+    "evidence": {
+      "max_age_num_blocks": "100000",
+      "max_age_duration": "172800000000000"
+    },
+    "validator": {
+      "pub_key_types": [
+        "ed25519"
+      ]
+    }
+  },
+  "validators": [
+    {
+      "address": "F304D4BAA3B4AA002CB7AF1784E646CC3DD2E512",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "JzlZIadNLXxlCwySdyOEnF5fKrXlbAOc/ZL/lYXqjJI="
+      },
+      "power": "10",
+      "name": ""
+    }
+  ],
+  "app_hash": ""
+}

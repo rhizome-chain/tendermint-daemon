@@ -3,9 +3,9 @@ package worker
 import (
 	"errors"
 	"fmt"
-	
+
 	"github.com/tendermint/tendermint/libs/log"
-	
+
 	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	"github.com/rhizome-chain/tendermint-daemon/daemon/job"
 	"github.com/rhizome-chain/tendermint-daemon/types"
@@ -62,12 +62,12 @@ func (manager *Manager) registerWorker(job job.Job) error {
 		return errors.New(fmt.Sprintf("worker[%s] is already registered. "+
 			"If you want register new one, DeregisterWorker first", job.ID))
 	}
-	
+
 	worker, err := manager.newWorker(job)
 	if err != nil {
 		return err
 	}
-	
+
 	manager.workers[job.ID] = worker
 	err = worker.Start()
 	return err
@@ -79,14 +79,14 @@ func (manager *Manager) newWorker(job job.Job) (Worker, error) {
 		return nil, err
 	}
 	helper := NewHelper(fac.Space(), manager.config, manager.logger, job, manager.dao)
-	
+
 	if err != nil {
 		manager.logger.Error(fmt.Sprintf("cannot find worker factory '%s'", job.FactoryName), err)
 		return nil, err
 	}
-	
+
 	worker, err := fac.NewWorker(helper)
-	
+
 	if err != nil {
 		manager.logger.Error("cannot create worker ", err)
 		return nil, err
@@ -100,27 +100,27 @@ func (manager *Manager) deregisterWorker(jobID string) error {
 	if worker == nil {
 		return errors.New("Worker[" + jobID + "] is not registered.")
 	}
-	
+
 	err := worker.Stop()
-	
+
 	if err == nil {
 		delete(manager.workers, jobID)
 	}
-	
+
 	return err
 }
 
 // SetJobs ...
 func (manager *Manager) SetJobs(jobs []job.Job) {
 	manager.logger.Info("[WorkerManager] Set Jobs:", "job_count", len(jobs))
-	
+
 	tempWorkers := make(map[string]Worker)
 	newWorkers := make(map[string]Worker)
-	
+
 	for id, worker := range manager.workers {
 		tempWorkers[id] = worker
 	}
-	
+
 	for _, job := range jobs {
 		worker := tempWorkers[job.ID]
 		if worker != nil {
@@ -132,28 +132,30 @@ func (manager *Manager) SetJobs(jobs []job.Job) {
 				continue
 			} else {
 				worker = worker2
-				manager.logger.Info("[WARN-WorkerMan] New Worker ", "jonID", job.ID)
+				manager.logger.Info("[WARN-WorkerMan] New Worker ", "jobID", job.ID)
 			}
 		}
-		
+
 		newWorkers[job.ID] = worker
 	}
 	// 제거된 worker 종료하기
 	for id, worker := range tempWorkers {
 		worker.Stop()
-		manager.logger.Info("[WARN-WorkerMan] Dispose Worker ", "jonID", id)
+		manager.logger.Info("[WARN-WorkerMan] Dispose Worker ", "jobID", id)
 	}
-	
+
 	manager.workers = newWorkers
-	
+
+	manager.logger.Info("[WARN-WorkerMan] new Workers ", "count", len(newWorkers))
+
 	for id, worker := range manager.workers {
 		if !worker.IsStarted() {
 			go func(id string, worker Worker) {
-				manager.logger.Info("[WARN-WorkerMan] New Worker Starting ", "jonID", id)
+				manager.logger.Info("[WARN-WorkerMan] New Worker Starting ", "jobID", id)
 				worker.Start()
 			}(id, worker)
 		} else {
-			manager.logger.Info("[WARN-WorkerMan] Remained Worker ", "jonID", id)
+			manager.logger.Info("[WARN-WorkerMan] Remained Worker ", "jobID", id)
 		}
 	}
 }
