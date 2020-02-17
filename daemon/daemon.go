@@ -29,6 +29,8 @@ type Daemon struct {
 	jobManager     *job.Manager
 	workerManager  *worker.Manager
 	jobOrganizer   job.Organizer
+	BeforeStartingHandler func(dm *Daemon)
+	AfterStartedHandler func(dm *Daemon)
 }
 
 func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config common.DaemonConfig, spaceRegistry types.SpaceRegistry) (dm *Daemon) {
@@ -79,7 +81,11 @@ func (dm *Daemon) Start() {
 	go func() {
 		dm.waitReady()
 		
-		dm.logger.Info("[Dist-Daemon] Start Daemon...", "node_id", dm.tmNode.NodeInfo().ID())
+		dm.logger.Info("[Dist-Daemon] Starting Daemon...", "node_id", dm.tmNode.NodeInfo().ID())
+		
+		if dm.BeforeStartingHandler != nil {
+			dm.BeforeStartingHandler(dm)
+		}
 		
 		dm.clusterManager.Start()
 		dm.jobManager.Start()
@@ -103,7 +109,9 @@ func (dm *Daemon) Start() {
 			"daemon-onJobsChanged",
 			dm.onJobsChanged)
 		
-		common.PublishDaemonEvent(StartedEvent{})
+		if dm.AfterStartedHandler != nil {
+			dm.AfterStartedHandler(dm)
+		}
 		
 		dm.checkJobsAndAllocate()
 	}()

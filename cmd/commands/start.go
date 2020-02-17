@@ -27,7 +27,7 @@ var (
 func AddStartCommand(cmd *cobra.Command, daemonProvider *daemon.BaseProvider) {
 	nodeProvider := tm.NodeProvider{}
 	// Create & start node
-	cmd.AddCommand(NewStartCmd(nodeProvider.NewNode, daemonProvider.NewDaemon))
+	cmd.AddCommand(NewStartCmd(nodeProvider.NewNode, daemonProvider))
 }
 
 
@@ -113,7 +113,7 @@ func AddDaemonFlags(cmd *cobra.Command) {
 
 // NewRunNodeCmd returns the command that allows the CLI to start a node.
 // It can be used with a custom PrivValidator and in-process ABCI application.
-func NewStartCmd(nodeProvider tm.Provider, daemonProvider daemon.Provider) *cobra.Command {
+func NewStartCmd(nodeProvider tm.Provider, daemonProvider *daemon.BaseProvider) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run Dist-Daemon tendermint node",
@@ -152,7 +152,7 @@ func NewStartCmd(nodeProvider tm.Provider, daemonProvider daemon.Provider) *cobr
 				AliveThresholdSeconds: threshold,
 			}
 			
-			dm := daemonProvider(config, logger, tmNode, dapp, daemonConfig)
+			dm := daemonProvider.NewDaemon(cmd, config, logger, tmNode, dapp, daemonConfig)
 			dm.Start()
 			
 			addr, err := cmd.Flags().GetString("daemon.api_addr")
@@ -165,6 +165,9 @@ func NewStartCmd(nodeProvider tm.Provider, daemonProvider daemon.Provider) *cobr
 	
 	AddNodeFlags(cmd)
 	AddDaemonFlags(cmd)
+	if daemonProvider.AddFlags != nil {
+		daemonProvider.AddFlags(cmd)
+	}
 	return cmd
 }
 

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	dmcfg "github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	"os"
 	"path/filepath"
 
@@ -19,6 +20,7 @@ import (
 
 var (
 	config = cfg.DefaultConfig()
+	daemonConfig = dmcfg.DaemonConfig{}
 	logger = dmlog.NewTMLogger(log.NewSyncWriter(os.Stdout))
 )
 

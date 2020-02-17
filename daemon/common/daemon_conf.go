@@ -9,11 +9,19 @@ type DaemonConfig struct {
 	NodeID   string
 	NodeName string
 	// HeartbeatInterval Heartbeat Interval
-	HeartbeatInterval uint
+	//HeartbeatInterval uint
 	
 	// CheckHeartbeatInterval Heartbeat check Interval
 	// CheckHeartbeatInterval uint
 	
 	// AliveThreasholdSecond Heartbeat time Threshold
 	AliveThresholdSeconds uint
+}
+
+
+func NewDaemonConfig() *DaemonConfig {
+	conf := &DaemonConfig{
+		AliveThresholdSeconds: uint(2),
+	}
+	return conf
 }
