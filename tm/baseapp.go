@@ -109,8 +109,9 @@ func (app *BaseApplication) RegisterSpaceIfNotExist(name string) {
 }
 
 func (app *BaseApplication) registerSpace(name string) *store.Registry {
-	if _, ok := app.spaces[name]; ok {
-		panic("[ERROR] Register Space '" + name + "' already exists.")
+	if reg, ok := app.spaces[name]; ok {
+		app.logger.Error("[ERROR] Register Space '" + name + "' already exists.")
+		return reg
 	}
 	
 	db, err := dbm.NewGoLevelDB(name, app.config.DBDir())
@@ -132,7 +133,12 @@ func (app *BaseApplication) getSpace(name string) *store.Registry {
 }
 
 func (app *BaseApplication) getSpaceStoreAny(space string, path string) *store.Store {
-	storeRegistry := app.getSpace(space)
+	storeRegistry, ok := app.spaces[space]
+	if !ok {
+		storeRegistry = app.registerSpace(space)
+		app.logger.Info(fmt.Sprintf("[WARN] Force to make Space[%s]",space))
+	}
+	
 	return storeRegistry.GetOrMakeStore(path)
 }
 
