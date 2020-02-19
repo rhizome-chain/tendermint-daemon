@@ -2,25 +2,23 @@ package commands
 
 import (
 	"fmt"
-	dmcfg "github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	"os"
 	"path/filepath"
-
+	
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmos "github.com/tendermint/tendermint/libs/os"
-
+	
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
-
+	
 	dmlog "github.com/rhizome-chain/tendermint-daemon/tm/log"
 )
 
 var (
 	config = cfg.DefaultConfig()
-	daemonConfig = dmcfg.DaemonConfig{}
 	logger = dmlog.NewTMLogger(log.NewSyncWriter(os.Stdout))
 )
 
@@ -78,7 +76,6 @@ var RootCmd = &cobra.Command{
 func InitRootCommand() *cobra.Command {
 	rootCmd := RootCmd
 	rootCmd.AddCommand(
-		NewInitCmd(),
 		ResetAllCmd,
 		ResetPrivValidatorCmd,
 		ShowValidatorCmd,

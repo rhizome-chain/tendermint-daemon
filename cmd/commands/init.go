@@ -14,26 +14,35 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
+	
+	"github.com/rhizome-chain/tendermint-daemon/daemon"
 )
 
 // InitFilesCmd initialises a fresh Tendermint Core instance.
 
-func NewInitCmd() *cobra.Command {
+
+func AddInitCommand(cmd *cobra.Command, daemonProvider *daemon.BaseProvider) {
+	// Create Init
+	cmd.AddCommand(NewInitCmd(daemonProvider))
+}
+
+
+func NewInitCmd(daemonProvider *daemon.BaseProvider) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize Dist-Daemon on Tendermint",
-		RunE:  initFiles,
+		RunE:  func(cmd *cobra.Command, args []string) error{
+			return initFilesWithConfig(config, daemonProvider)
+		},
 	}
 	cmd.Flags().String("chain-id", config.ChainID(), "Chain ID")
 	cmd.Flags().String("node-name", config.Moniker, "Node Name")
+	
+	daemonProvider.AddFlags(cmd)
 	return cmd
 }
 
-func initFiles(cmd *cobra.Command, args []string) error {
-	return initFilesWithConfig(config)
-}
-
-func initFilesWithConfig(config *cfg.Config) error {
+func initFilesWithConfig(config *cfg.Config, daemonProvider *daemon.BaseProvider) error {
 	// private validator
 	privValKeyFile := config.PrivValidatorKeyFile()
 	privValStateFile := config.PrivValidatorStateFile()
@@ -94,6 +103,7 @@ func initFilesWithConfig(config *cfg.Config) error {
 		config.BaseConfig.Moniker = nodeName
 		cfg.WriteConfigFile(confFilePath, config)
 	}
-
+	
+	daemonProvider.InitFiles(config)
 	return nil
 }

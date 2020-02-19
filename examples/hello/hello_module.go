@@ -2,6 +2,7 @@ package hello
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/config"
 	
 	"github.com/rhizome-chain/tendermint-daemon/daemon"
 	"github.com/rhizome-chain/tendermint-daemon/daemon/worker"
@@ -36,3 +37,7 @@ func (e Module) AfterDaemonStarted(dm *daemon.Daemon) {
 	// DO Nothing
 }
 
+
+func (e Module) InitFile(config *config.Config) {
+	// DO Nothing
+}

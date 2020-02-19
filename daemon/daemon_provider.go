@@ -31,6 +31,14 @@ func (provider *BaseProvider) AddFlags(cmd *cobra.Command) {
 	}
 }
 
+func (provider *BaseProvider) InitFiles(config *cfg.Config) {
+	if provider.modules != nil {
+		for _, module := range provider.modules {
+			module.InitFile(config)
+		}
+	}
+}
+
 
 func (provider *BaseProvider) NewDaemon(cmd *cobra.Command, tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, daemonApp *tm.DaemonApp, config common.DaemonConfig) *Daemon {
 	dm := NewDaemon(tmCfg, logger, tmNode, config, daemonApp)

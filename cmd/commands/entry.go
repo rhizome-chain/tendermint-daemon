@@ -13,9 +13,9 @@ const (
 	DefaultBCDir = "chainroot"
 )
 
-func DoCmd(daemonProvider *daemon.BaseProvider){
+func DoCmd(daemonProvider *daemon.BaseProvider) {
 	rootCmd := InitRootCommand()
-	
+	AddInitCommand(rootCmd, daemonProvider)
 	AddStartCommand(rootCmd, daemonProvider)
 	
 	cmd := cli.PrepareBaseCmd(rootCmd, "TM", os.ExpandEnv(filepath.Join("./", DefaultBCDir)))
