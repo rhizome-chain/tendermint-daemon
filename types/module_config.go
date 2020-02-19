@@ -11,6 +11,17 @@ type ModuleConfig interface {
 	GetTemplate() string
 }
 
+
+type EmptyModuleConfig struct {
+}
+
+func (e EmptyModuleConfig) GetTemplate() string {
+	return ``
+}
+
+var _ ModuleConfig = (*EmptyModuleConfig)(nil)
+
+
 func WriteModuleConfigFile(filePath string, modCfg ModuleConfig) (err error) {
 	var configTemplate *template.Template
 	if configTemplate, err = template.New("configFileTemplate").Parse(modCfg.GetTemplate()); err != nil {
