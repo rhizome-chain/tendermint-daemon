@@ -36,7 +36,9 @@ func (dao *clusterDao) PutMember(member *Member) (err error) {
 		dao.logger.Error("PutMember marshal", err)
 		return err
 	}
-	//fmt.Println(" -------- PutMember :", member)
+	
+	dao.logger.Info("PutMember :", "member", member)
+	
 	msg := types.NewTxMsg(types.TxSet, common.SpaceDaemon, PathMember, member.NodeID, bytes)
 	
 	return dao.client.BroadcastTxSync(msg)

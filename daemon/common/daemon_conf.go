@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	
 	"io/ioutil"
 	"text/template"
 )
@@ -44,6 +46,7 @@ func LoadConfigFile(filePath string, dmCfg *DaemonConfig) (err error) {
 	
 	viper.ReadConfig(bytes.NewBuffer(bts))
 	viper.Unmarshal(dmCfg)
+	
 	return err
 }
 

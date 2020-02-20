@@ -27,6 +27,21 @@ func AddInitCommand(cmd *cobra.Command, daemonProvider *daemon.BaseProvider) {
 	cmd.AddCommand(NewInitCmd(daemonProvider))
 }
 
+func AddFlags(cmd *cobra.Command){
+	cmd.Flags().Bool("force-rewrite", false, "force rewrite")
+	
+	cmd.Flags().String("chain-id", config.ChainID(), "Chain ID")
+	cmd.Flags().String("node-name", config.Moniker, "Node Name")
+	cmd.Flags().String("rpc.laddr", config.RPC.ListenAddress, "rpc laddr")
+	cmd.Flags().String("p2p.persistent_peers", config.P2P.PersistentPeers, "p2p persistent_peers")
+	cmd.Flags().String("p2p.laddr", config.P2P.ListenAddress, "p2p laddr")
+	cmd.Flags().Bool("p2p.allow_duplicate_ip", config.P2P.AllowDuplicateIP, "p2p persistent_peers")
+	cmd.Flags().Int("mempool.size", config.Mempool.Size, "mempool.size")
+	cmd.Flags().Int64("mempool.max_txs_bytes", config.Mempool.MaxTxsBytes, "mempool.max_txs_bytes")
+	cmd.Flags().Int("mempool.max_tx_bytes", config.Mempool.MaxTxBytes, "mempool.max_tx_bytes")
+	cmd.Flags().String("instrumentation.prometheus_listen_addr", config.Instrumentation.PrometheusListenAddr, "instrumentation.prometheus_listen_addr")
+	
+}
 
 func NewInitCmd(daemonProvider *daemon.BaseProvider) *cobra.Command {
 	cmd := &cobra.Command{
@@ -36,12 +51,7 @@ func NewInitCmd(daemonProvider *daemon.BaseProvider) *cobra.Command {
 			return initFilesWithConfig(config, daemonProvider)
 		},
 	}
-	
-	cmd.Flags().String("chain-id", config.ChainID(), "Chain ID")
-	cmd.Flags().String("node-name", config.Moniker, "Node Name")
-	cmd.Flags().String("p2p.persistent_peers", config.P2P.PersistentPeers, "p2p persistent_peers")
-	cmd.Flags().Bool("p2p.allow_duplicate_ip", config.P2P.AllowDuplicateIP, "p2p persistent_peers")
-	
+	AddFlags(cmd)
 	daemonProvider.AddFlags(cmd)
 	return cmd
 }
@@ -102,10 +112,12 @@ func initFilesWithConfig(config *cfg.Config, daemonProvider *daemon.BaseProvider
 
 	confFilePath := filepath.Join(config.RootDir, "config", "config.toml")
 
-	if !tmos.FileExists(confFilePath) {
+	
+	if viper.GetBool("force-rewrite") || !tmos.FileExists(confFilePath) {
 		nodeName := viper.GetString("node-name")
 		config.BaseConfig.Moniker = nodeName
 		cfg.WriteConfigFile(confFilePath, config)
+		logger.Info("Write config.toml ", "path", confFilePath)
 	}
 	
 	daemonConfig := &common.DaemonConfig{

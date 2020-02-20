@@ -137,24 +137,17 @@ func NewStartCmd(nodeProvider tm.Provider, daemonProvider *daemon.BaseProvider) 
 			
 			daemonConfig := dmcfg.DaemonConfig{}
 			
-			//daemonConfig := dmcfg.DaemonConfig{
-			//	ChainID:               config.ChainID(),
-			//	NodeID:                string(tmNode.NodeInfo().ID()),
-			//	NodeName:              config.Moniker,
-			//	AliveThresholdSeconds: threshold,
-			//}
-			
-			confFilePath := filepath.Join(config.RootDir, "config", "config.toml")
+			confFilePath := filepath.Join(config.RootDir, "config", "daemon.toml")
 			dmcfg.LoadConfigFile(confFilePath, &daemonConfig)
-			
-			fmt.Println("Load daemonConfig" , daemonConfig)
+			daemonConfig.ChainID = config.ChainID()
+			daemonConfig.NodeID = string(tmNode.NodeInfo().ID())
+			daemonConfig.NodeName = config.Moniker
 			
 			dm := daemonProvider.NewDaemon(cmd, config, logger, tmNode, dapp, daemonConfig)
 			dm.Start()
 			
-			addr, err := cmd.Flags().GetString("daemon.api_addr")
 			apiServer := api.NewServer(dm)
-			apiServer.Start(addr)
+			apiServer.Start(daemonConfig.APIAddr)
 			// Run forever.
 			select {}
 		},
