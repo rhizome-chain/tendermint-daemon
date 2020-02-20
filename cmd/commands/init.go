@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	"path/filepath"
 
 	"github.com/spf13/viper"
@@ -35,8 +36,11 @@ func NewInitCmd(daemonProvider *daemon.BaseProvider) *cobra.Command {
 			return initFilesWithConfig(config, daemonProvider)
 		},
 	}
+	
 	cmd.Flags().String("chain-id", config.ChainID(), "Chain ID")
 	cmd.Flags().String("node-name", config.Moniker, "Node Name")
+	cmd.Flags().String("p2p.persistent_peers", config.P2P.PersistentPeers, "p2p persistent_peers")
+	cmd.Flags().Bool("p2p.allow_duplicate_ip", config.P2P.AllowDuplicateIP, "p2p persistent_peers")
 	
 	daemonProvider.AddFlags(cmd)
 	return cmd
@@ -104,6 +108,14 @@ func initFilesWithConfig(config *cfg.Config, daemonProvider *daemon.BaseProvider
 		cfg.WriteConfigFile(confFilePath, config)
 	}
 	
-	daemonProvider.InitFiles(config)
+	daemonConfig := &common.DaemonConfig{
+		ChainID:               config.ChainID(),
+		NodeName:              config.Moniker,
+	}
+	
+	viper.Unmarshal(daemonConfig)
+	
+	
+	daemonProvider.InitFiles(config,daemonConfig)
 	return nil
 }

@@ -49,7 +49,7 @@ func ParseConfig() (*cfg.Config, error) {
 // RootCmd is the root command for Tendermint core.
 var RootCmd = &cobra.Command{
 	Use:   "bcb",
-	Short: "Brige-Chain on Tendermint Core (BFT Consensus)",
+	Short: "Rhizome-Chain on Tendermint Core (BFT Consensus)",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
 		if cmd.Name() == VersionCmd.Name() {
 			return nil

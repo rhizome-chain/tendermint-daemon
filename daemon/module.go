@@ -15,6 +15,7 @@ type Module interface {
 	BeforeDaemonStarting(cmd *cobra.Command, dm *Daemon, moduleConfig types.ModuleConfig)
 	AfterDaemonStarted(dm *Daemon)
 	InitFile(config *config.Config)
+	LoadFile(config *config.Config)(modcfg types.ModuleConfig)
 }
 
 type BaseModule struct {
@@ -43,6 +44,11 @@ func (b BaseModule) AfterDaemonStarted(dm *Daemon) {
 
 func (b BaseModule) InitFile(config *config.Config) {
 	// To be implemented
+}
+
+func (b BaseModule) LoadFile(config *config.Config)(modcfg types.ModuleConfig) {
+	// To be implemented
+	return modcfg
 }
 
 var _ Module = (*BaseModule)(nil)

@@ -4,6 +4,7 @@ import (
 	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	"github.com/rhizome-chain/tendermint-daemon/tm"
 	"github.com/spf13/cobra"
+	"path/filepath"
 	
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
@@ -24,6 +25,8 @@ func (provider *BaseProvider) AddModule(module Module) {
 }
 
 func (provider *BaseProvider) AddFlags(cmd *cobra.Command) {
+	common.AddDaemonFlags(cmd)
+	
 	if provider.modules != nil {
 		for _, module := range provider.modules {
 			module.AddFlags(cmd)
@@ -31,7 +34,9 @@ func (provider *BaseProvider) AddFlags(cmd *cobra.Command) {
 	}
 }
 
-func (provider *BaseProvider) InitFiles(config *cfg.Config) {
+func (provider *BaseProvider) InitFiles(config *cfg.Config, daemonConfig *common.DaemonConfig) {
+	confFilePath := filepath.Join(config.RootDir, "config", "daemon.toml")
+	common.WriteConfigFile(confFilePath, daemonConfig)
 	if provider.modules != nil {
 		for _, module := range provider.modules {
 			module.InitFile(config)
@@ -51,7 +56,7 @@ func (provider *BaseProvider) NewDaemon(cmd *cobra.Command, tmCfg *cfg.Config, l
 		
 		dm.BeforeStartingHandler = func(dm *Daemon) {
 			for _, module := range provider.modules {
-				moduleConfig := module.GetDefaultConfig()
+				moduleConfig := module.LoadFile(tmCfg)
 				module.BeforeDaemonStarting(cmd, dm, moduleConfig)
 			}
 		}

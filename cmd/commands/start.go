@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	
 	"github.com/rhizome-chain/tendermint-daemon/api"
 	"github.com/rhizome-chain/tendermint-daemon/tm"
@@ -83,6 +84,8 @@ func AddNodeFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("p2p.seed_mode", config.P2P.SeedMode, "Enable/disable seed mode")
 	cmd.Flags().String("p2p.private_peer_ids", config.P2P.PrivatePeerIDs, "Comma-delimited private peer IDs")
 	
+	cmd.Flags().Bool("p2p.allow_duplicate_ip", config.P2P.AllowDuplicateIP, "p2p persistent_peers")
+	
 	// consensus flags
 	cmd.Flags().Bool(
 		"consensus.create_empty_blocks",
@@ -102,13 +105,6 @@ func AddNodeFlags(cmd *cobra.Command) {
 		"db_dir",
 		config.DBPath,
 		"Database directory")
-}
-
-// AddNodeFlags exposes some common configuration options on the command-line
-// These are exposed for convenience of commands embedding a tendermint node
-func AddDaemonFlags(cmd *cobra.Command) {
-	cmd.Flags().Uint("daemon.alive_threshold", 2, "Alive Threshold Seconds")
-	cmd.Flags().String("daemon.api_addr", "0.0.0.0:7777", "API Service ip:port")
 }
 
 // NewRunNodeCmd returns the command that allows the CLI to start a node.
@@ -139,18 +135,19 @@ func NewStartCmd(nodeProvider tm.Provider, daemonProvider *daemon.BaseProvider) 
 			}
 			logger.Info("Started node", "nodeInfo", tmNode.Switch().NodeInfo())
 			
-			threshold, err := cmd.Flags().GetUint("daemon.alive_threshold")
+			daemonConfig := dmcfg.DaemonConfig{}
 			
-			if err != nil {
-				threshold = 2
-			}
+			//daemonConfig := dmcfg.DaemonConfig{
+			//	ChainID:               config.ChainID(),
+			//	NodeID:                string(tmNode.NodeInfo().ID()),
+			//	NodeName:              config.Moniker,
+			//	AliveThresholdSeconds: threshold,
+			//}
 			
-			daemonConfig := dmcfg.DaemonConfig{
-				ChainID:               config.ChainID(),
-				NodeID:                string(tmNode.NodeInfo().ID()),
-				NodeName:              config.Moniker,
-				AliveThresholdSeconds: threshold,
-			}
+			confFilePath := filepath.Join(config.RootDir, "config", "config.toml")
+			dmcfg.LoadConfigFile(confFilePath, &daemonConfig)
+			
+			fmt.Println("Load daemonConfig" , daemonConfig)
 			
 			dm := daemonProvider.NewDaemon(cmd, config, logger, tmNode, dapp, daemonConfig)
 			dm.Start()
@@ -164,10 +161,7 @@ func NewStartCmd(nodeProvider tm.Provider, daemonProvider *daemon.BaseProvider) 
 	}
 	
 	AddNodeFlags(cmd)
-	AddDaemonFlags(cmd)
-	if daemonProvider.AddFlags != nil {
-		daemonProvider.AddFlags(cmd)
-	}
+	daemonProvider.AddFlags(cmd)
 	return cmd
 }
 
