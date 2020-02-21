@@ -12,14 +12,24 @@ type Module interface {
 	GetDefaultConfig() types.ModuleConfig
 	Factories() (facs []worker.Factory)
 	AddFlags(cmd *cobra.Command)
-	BeforeDaemonStarting(cmd *cobra.Command, dm *Daemon, moduleConfig types.ModuleConfig)
+	BeforeDaemonStarting(cmd *cobra.Command, dm *Daemon)
 	AfterDaemonStarted(dm *Daemon)
 	InitFile(config *config.Config)
-	LoadFile(config *config.Config)(modcfg types.ModuleConfig)
+	//LoadFile(config *config.Config)
+	Init(config *config.Config)
+	GetConfig() types.ModuleConfig
 }
 
 type BaseModule struct {
 
+}
+
+func (b BaseModule) Init(config *config.Config) {
+	//DO NOTHING
+}
+
+func (b BaseModule) GetConfig() types.ModuleConfig {
+	return &types.EmptyModuleConfig{}
 }
 
 func (b BaseModule) GetDefaultConfig() types.ModuleConfig {
@@ -34,7 +44,7 @@ func (b BaseModule) AddFlags(cmd *cobra.Command) {
 	// To be implemented
 }
 
-func (b BaseModule) BeforeDaemonStarting(cmd *cobra.Command, dm *Daemon, moduleConfig types.ModuleConfig) {
+func (b BaseModule) BeforeDaemonStarting(cmd *cobra.Command, dm *Daemon) {
 	// To be implemented
 }
 
@@ -44,11 +54,6 @@ func (b BaseModule) AfterDaemonStarted(dm *Daemon) {
 
 func (b BaseModule) InitFile(config *config.Config) {
 	// To be implemented
-}
-
-func (b BaseModule) LoadFile(config *config.Config)(modcfg types.ModuleConfig) {
-	// To be implemented
-	return modcfg
 }
 
 var _ Module = (*BaseModule)(nil)

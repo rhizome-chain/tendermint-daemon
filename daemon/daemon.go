@@ -17,23 +17,25 @@ import (
 )
 
 type Daemon struct {
-	id             string
-	tmNode         *node.Node
-	tmCfg          *cfg.Config
-	logger         log.Logger
-	client         types.Client
-	context        common.Context
-	config         common.DaemonConfig
-	spaceRegistry  types.SpaceRegistry
-	clusterManager *cluster.Manager
-	jobManager     *job.Manager
-	workerManager  *worker.Manager
-	jobOrganizer   job.Organizer
+	id                    string
+	tmNode                *node.Node
+	tmCfg                 *cfg.Config
+	logger                log.Logger
+	client                types.Client
+	context               common.Context
+	config                common.DaemonConfig
+	modules               []Module
+	spaceRegistry         types.SpaceRegistry
+	clusterManager        *cluster.Manager
+	jobManager            *job.Manager
+	workerManager         *worker.Manager
+	jobOrganizer          job.Organizer
 	BeforeStartingHandler func(dm *Daemon)
-	AfterStartedHandler func(dm *Daemon)
+	AfterStartedHandler   func(dm *Daemon)
 }
 
-func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config common.DaemonConfig, spaceRegistry types.SpaceRegistry) (dm *Daemon) {
+func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config common.DaemonConfig,
+	spaceRegistry types.SpaceRegistry, modules []Module) (dm *Daemon) {
 	ctx := common.NewContext(tmCfg, logger, tmNode, config)
 	dm = &Daemon{
 		context: ctx,
@@ -41,6 +43,7 @@ func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config c
 		tmCfg:   tmCfg,
 		logger:  logger,
 		tmNode:  tmNode,
+		modules: modules,
 	}
 	
 	dm.client = ctx.GetClient()
@@ -53,6 +56,17 @@ func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config c
 	ctx.SetClusterState(dm.clusterManager.GetCluster())
 	dm.jobManager = job.NewManager(ctx)
 	dm.workerManager = worker.NewManager(ctx, spaceRegistry)
+	
+	if modules != nil {
+		for _, module := range modules {
+			module.Init(tmCfg)
+			for _, fac := range module.Factories() {
+				dm.workerManager.RegisterWorkerFactory(fac)
+			}
+			dm.logger.Info(fmt.Sprintf("Init Module."),"config", module.GetConfig())
+		}
+	}
+	
 	return dm
 }
 

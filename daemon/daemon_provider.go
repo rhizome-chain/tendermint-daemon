@@ -44,30 +44,24 @@ func (provider *BaseProvider) InitFiles(config *cfg.Config, daemonConfig *common
 	}
 }
 
-
-func (provider *BaseProvider) NewDaemon(cmd *cobra.Command, tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, daemonApp *tm.DaemonApp, config common.DaemonConfig) *Daemon {
-	dm := NewDaemon(tmCfg, logger, tmNode, config, daemonApp)
-	if provider.modules != nil {
-		for _, module := range provider.modules {
-			for _, fac := range module.Factories() {
-				dm.RegisterWorkerFactory(fac)
-			}
-		}
-		
+func (provider *BaseProvider) NewDaemon(cmd *cobra.Command, tmCfg *cfg.Config, logger log.Logger,
+	tmNode *node.Node, daemonApp *tm.DaemonApp, config common.DaemonConfig) *Daemon {
+	
+	dm := NewDaemon(tmCfg, logger, tmNode, config, daemonApp, provider.modules)
+	
+	if dm.modules != nil {
 		dm.BeforeStartingHandler = func(dm *Daemon) {
-			for _, module := range provider.modules {
-				moduleConfig := module.LoadFile(tmCfg)
-				module.BeforeDaemonStarting(cmd, dm, moduleConfig)
+			for _, module := range dm.modules {
+				module.BeforeDaemonStarting(cmd, dm)
 			}
 		}
-		
+	
 		dm.AfterStartedHandler = func(dm *Daemon) {
-			for _, module := range provider.modules {
+			for _, module := range dm.modules {
 				module.AfterDaemonStarted(dm)
 			}
 		}
 	}
-	
 	
 	return dm
 }
