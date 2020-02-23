@@ -12,32 +12,29 @@ import (
 type Module struct {
 }
 
-var _ daemon.Module = (*Module)(nil)
+func (e *Module) Name() string {
+	return "hello"
+}
 
-
-func (e Module) GetDefaultConfig() types.ModuleConfig {
+func (e *Module) GetConfig() types.ModuleConfig {
 	config := &types.EmptyModuleConfig{}
 	return config
 }
 
-func (e Module) Factories() (facs []worker.Factory) {
-	return []worker.Factory{&Factory{}}
-}
-
-func (e Module) AddFlags(cmd *cobra.Command) {
+func (e *Module) Init(config *config.Config) {
 	// DO NOTHING
 }
 
+func (e *Module) BeforeDaemonStarting(cmd *cobra.Command, dm *daemon.Daemon) {
+	// DO NOTHING
+}
 
-func (e Module) BeforeDaemonStarting(cmd *cobra.Command, dm *daemon.Daemon, moduleConfig types.ModuleConfig) {
+func (e *Module) AfterDaemonStarted(dm *daemon.Daemon) {
 	// DO Nothing
 }
 
-func (e Module) AfterDaemonStarted(dm *daemon.Daemon) {
-	// DO Nothing
+func (e *Module) Factories() (facs []worker.Factory) {
+	return []worker.Factory{&Factory{}}
 }
 
-
-func (e Module) InitFile(config *config.Config) {
-	// DO Nothing
-}
+var _ daemon.Module = (*Module)(nil)

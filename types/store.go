@@ -3,7 +3,7 @@ package types
 import dbm "github.com/tendermint/tm-db"
 
 type KeyValue struct {
-	Key []byte
+	Key   []byte
 	Value []byte
 }
 
@@ -16,11 +16,10 @@ type Store interface {
 	Delete(key []byte) error
 	DeleteSync(key []byte) error
 	Iterator(start, end []byte) (dbm.Iterator, error)
-	GetMany(start, end []byte) (kvArrayBytes[]byte, err error)
+	GetMany(start, end []byte) (kvArrayBytes []byte, err error)
 }
 
 type SpaceRegistry interface {
 	RegisterSpace(name string)
 	RegisterSpaceIfNotExist(name string)
 }
-

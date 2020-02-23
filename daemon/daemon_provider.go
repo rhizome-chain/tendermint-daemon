@@ -1,10 +1,13 @@
 package daemon
 
 import (
+	"fmt"
+	"path/filepath"
+	
+	"github.com/spf13/cobra"
+	
 	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	"github.com/rhizome-chain/tendermint-daemon/tm"
-	"github.com/spf13/cobra"
-	"path/filepath"
 	
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
@@ -14,22 +17,22 @@ import (
 type Provider func(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, daemonApp *tm.DaemonApp, config common.DaemonConfig) *Daemon
 
 type BaseProvider struct {
-	modules []Module
+	moduleProviders []ModuleProvider
 }
 
-func (provider *BaseProvider) AddModule(module Module) {
-	if provider.modules == nil {
-		provider.modules = []Module{}
+func (provider *BaseProvider) AddModuleProvider(moduleProvider ModuleProvider) {
+	if provider.moduleProviders == nil {
+		provider.moduleProviders = []ModuleProvider{}
 	}
-	provider.modules = append(provider.modules, module)
+	provider.moduleProviders = append(provider.moduleProviders, moduleProvider)
 }
 
 func (provider *BaseProvider) AddFlags(cmd *cobra.Command) {
 	common.AddDaemonFlags(cmd)
 	
-	if provider.modules != nil {
-		for _, module := range provider.modules {
-			module.AddFlags(cmd)
+	if provider.moduleProviders != nil {
+		for _, provider := range provider.moduleProviders {
+			provider.AddFlags(cmd)
 		}
 	}
 }
@@ -37,9 +40,9 @@ func (provider *BaseProvider) AddFlags(cmd *cobra.Command) {
 func (provider *BaseProvider) InitFiles(config *cfg.Config, daemonConfig *common.DaemonConfig) {
 	confFilePath := filepath.Join(config.RootDir, "config", "daemon.toml")
 	common.WriteConfigFile(confFilePath, daemonConfig)
-	if provider.modules != nil {
-		for _, module := range provider.modules {
-			module.InitFile(config)
+	if provider.moduleProviders != nil {
+		for _, provider := range provider.moduleProviders {
+			provider.InitFile(config)
 		}
 	}
 }
@@ -47,7 +50,21 @@ func (provider *BaseProvider) InitFiles(config *cfg.Config, daemonConfig *common
 func (provider *BaseProvider) NewDaemon(cmd *cobra.Command, tmCfg *cfg.Config, logger log.Logger,
 	tmNode *node.Node, daemonApp *tm.DaemonApp, config common.DaemonConfig) *Daemon {
 	
-	dm := NewDaemon(tmCfg, logger, tmNode, config, daemonApp, provider.modules)
+	dm := NewDaemon(tmCfg, logger, tmNode, config, daemonApp)
+	
+	if provider.moduleProviders != nil {
+		for _, moduleProvider := range provider.moduleProviders {
+			module := moduleProvider.NewModule(tmCfg, config)
+			
+			module.Init(tmCfg)
+			for _, fac := range module.Factories() {
+				dm.workerManager.RegisterWorkerFactory(fac)
+			}
+			
+			dm.AddModule(module)
+			dm.logger.Info(fmt.Sprintf("Init Module[%s].", module.Name()), "config", module.GetConfig())
+		}
+	}
 	
 	if dm.modules != nil {
 		dm.BeforeStartingHandler = func(dm *Daemon) {
@@ -55,7 +72,7 @@ func (provider *BaseProvider) NewDaemon(cmd *cobra.Command, tmCfg *cfg.Config, l
 				module.BeforeDaemonStarting(cmd, dm)
 			}
 		}
-	
+		
 		dm.AfterStartedHandler = func(dm *Daemon) {
 			for _, module := range dm.modules {
 				module.AfterDaemonStarted(dm)

@@ -3,7 +3,7 @@ package common
 import "github.com/rhizome-chain/tendermint-daemon/types"
 
 const (
-	EventScopeDaemon  = types.EventScope("daemon")
+	EventScopeDaemon = types.EventScope("daemon")
 )
 
 var (
@@ -27,4 +27,3 @@ func UnsubscribeDaemonEvent(path types.EventPath, name string) {
 // func StartDaemonEventBus() {
 // 	daemonEventBus.Start()
 // }
-

@@ -174,7 +174,7 @@ func (queue *Queue) Pop() (value *Command) {
 	queue.Lock()
 	defer queue.Unlock()
 	
-	for value = queue._pop() ; value == nil; value = queue._pop() {
+	for value = queue._pop(); value == nil; value = queue._pop() {
 		queue.cond.Wait()
 	}
 	

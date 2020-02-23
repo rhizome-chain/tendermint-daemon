@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"text/template"
+	
+	"github.com/spf13/viper"
 )
 
 type ModuleConfig interface {
@@ -22,7 +23,6 @@ func (e EmptyModuleConfig) GetTemplate() string {
 
 var _ ModuleConfig = (*EmptyModuleConfig)(nil)
 
-
 func LoadModuleConfigFile(filePath string, modCfg interface{}) (err error) {
 	bts, err := ioutil.ReadFile(filePath)
 	
@@ -30,7 +30,6 @@ func LoadModuleConfigFile(filePath string, modCfg interface{}) (err error) {
 	viper.Unmarshal(modCfg)
 	return err
 }
-
 
 func WriteModuleConfigFile(filePath string, modCfg ModuleConfig) (err error) {
 	var configTemplate *template.Template

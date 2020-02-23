@@ -1,9 +1,10 @@
 package api
 
 import (
-	"github.com/rhizome-chain/tendermint-daemon/daemon"
 	"log"
-	
+
+	"github.com/rhizome-chain/tendermint-daemon/daemon"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,8 +17,8 @@ type API interface {
 
 // Server ..
 type Server struct {
-	router         *gin.Engine
-	err            chan error
+	router *gin.Engine
+	err    chan error
 }
 
 // NewServer create new API Server
@@ -28,7 +29,6 @@ func NewServer(dm *daemon.Daemon) (server *Server) {
 	
 	dmapi := NewDaemonAPI(dm)
 	server.AddAPI(dmapi)
-	
 	
 	return server
 }

@@ -2,10 +2,11 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	"sort"
 	"strings"
 	"time"
+	
+	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	
 	"github.com/rhizome-chain/tendermint-daemon/types"
 )
@@ -24,8 +25,6 @@ type Repository interface {
 	PutHeartbeat(nodeID string) (err error)
 	GetHeartbeats(handler func(nodeid string, time time.Time)) (err error)
 }
-
-
 
 // Cluster ..
 type Cluster struct {
@@ -126,7 +125,6 @@ func (cluster *Cluster) Local() *Member {
 func (cluster *Cluster) IsLeader() bool {
 	return cluster.localMember.IsLeader()
 }
-
 
 // Member member info
 type Member struct {

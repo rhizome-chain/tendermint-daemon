@@ -31,7 +31,6 @@ func AddStartCommand(cmd *cobra.Command, daemonProvider *daemon.BaseProvider) {
 	cmd.AddCommand(NewStartCmd(nodeProvider.NewNode, daemonProvider))
 }
 
-
 // AddNodeFlags exposes some common configuration options on the command-line
 // These are exposed for convenience of commands embedding a tendermint node
 func AddNodeFlags(cmd *cobra.Command) {

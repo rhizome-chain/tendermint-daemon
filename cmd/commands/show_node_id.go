@@ -2,9 +2,9 @@ package commands
 
 import (
 	"fmt"
-
+	
 	"github.com/spf13/cobra"
-
+	
 	"github.com/tendermint/tendermint/p2p"
 )
 
@@ -20,7 +20,7 @@ func showNodeID(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
+	
 	fmt.Println(nodeKey.ID())
 	return nil
 }

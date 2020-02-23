@@ -21,7 +21,7 @@ func (event MemberJobsChangedEvent) Path() types.EventPath { return MemberJobsCh
 type JobsChangedEvent struct {
 	common.DaemonEvent
 	BlockHeight int64
-	//JobIDs []string
+	// JobIDs []string
 }
 
 func (event JobsChangedEvent) Path() types.EventPath { return JobsChangedEventPath }

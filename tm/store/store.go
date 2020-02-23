@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	
 	"github.com/rhizome-chain/tendermint-daemon/types"
 	
-	dbm "github.com/tendermint/tm-db"
 	"sync"
+	
+	dbm "github.com/tendermint/tm-db"
 )
 
 const (
@@ -15,12 +17,12 @@ const (
 )
 
 var (
-	endBytes =[]byte("~~~~")
+	endBytes = []byte("~~~~")
 )
 
 type Path []byte
 
-//ValueOf
+// ValueOf
 func valueOf(keyStr string) Path {
 	return Path([]byte(keyStr))
 }
@@ -53,9 +55,7 @@ type Store struct {
 	db   dbm.DB
 }
 
-
 var _ types.Store = (*Store)(nil)
-
 
 func NewStore(path string, db dbm.DB) *Store {
 	return &Store{path: valueOf(path), db: db}
@@ -104,18 +104,17 @@ func (store *Store) Iterator(start, end []byte) (dbm.Iterator, error) {
 		endBts = store.path.makeKey(endBytes)
 	}
 	
-	//fmt.Println("[Store] Iterator ", string(startBytes), string(endBts))
+	// fmt.Println("[Store] Iterator ", string(startBytes), string(endBts))
 	return store.db.Iterator(startBytes, endBts)
 }
 
-
-func (store *Store) GetMany(start, end []byte) (kvArrayBytes[]byte, err error) {
+func (store *Store) GetMany(start, end []byte) (kvArrayBytes []byte, err error) {
 	iterator, err := store.Iterator(start, end)
 	// s, e := iterator.Domain()
 	// fmt.Println("Store # GetMany: start=", string(s), ", end=", string(e))
 	
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	
 	kvArray := []types.KeyValue{}
@@ -123,7 +122,7 @@ func (store *Store) GetMany(start, end []byte) (kvArrayBytes[]byte, err error) {
 	
 	for iterator.Valid() {
 		key := store.path.extractKey(iterator.Key())
-		kv = types.KeyValue{Key:key, Value:iterator.Value()}
+		kv = types.KeyValue{Key: key, Value: iterator.Value()}
 		kvArray = append(kvArray, kv)
 		
 		// fmt.Println("Store # GetMany:", string(iterator.Key()), string(iterator.Value()))
@@ -135,12 +134,12 @@ func (store *Store) GetMany(start, end []byte) (kvArrayBytes[]byte, err error) {
 	return kvArrayBytes, err
 }
 
-func (store *Store) GetKeys(start, end []byte) (keyArrayBytes[]byte, err error) {
+func (store *Store) GetKeys(start, end []byte) (keyArrayBytes []byte, err error) {
 	iterator, err := store.Iterator(start, end)
-	//fmt.Println("[Store] GetKeys ", start, end)
+	// fmt.Println("[Store] GetKeys ", start, end)
 	
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	
 	keyArray := []string{}

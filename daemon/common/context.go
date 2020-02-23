@@ -1,12 +1,14 @@
 package common
 
 import (
-	client "github.com/rhizome-chain/tendermint-daemon/tm/client"
-	"github.com/rhizome-chain/tendermint-daemon/types"
+	"time"
+	
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/node"
-	"time"
+	
+	"github.com/rhizome-chain/tendermint-daemon/tm/client"
+	"github.com/rhizome-chain/tendermint-daemon/types"
 )
 
 type ClusterState interface {

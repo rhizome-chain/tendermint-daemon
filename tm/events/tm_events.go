@@ -12,7 +12,7 @@ const (
 	
 	EndBlockEventPath   = types.EventPath("end-block")
 	BeginBlockEventPath = types.EventPath("begin-block")
-	CommitEventPath = types.EventPath("commit")
+	CommitEventPath     = types.EventPath("commit")
 )
 
 var (
@@ -55,18 +55,14 @@ type EndBlockEvent struct {
 
 func (event EndBlockEvent) Path() types.EventPath { return EndBlockEventPath }
 
-
 type CommitEvent struct {
 	BlockEvent
-	Height int64
-	Size   int64
+	Height  int64
+	Size    int64
 	AppHash []byte
 }
 
 func (event CommitEvent) Path() types.EventPath { return CommitEventPath }
-
-
-
 
 type TxEvent struct {
 	path types.EventPath
@@ -78,7 +74,7 @@ type TxEventHandler func(event TxEvent)
 
 func (event TxEvent) Path() types.EventPath { return event.path }
 
-func MakeTxEventPath(space string, path string, prefix string)  types.EventPath {
+func MakeTxEventPath(space string, path string, prefix string) types.EventPath {
 	eventPath := types.EventPath(space + "!" + path + "/" + prefix)
 	return eventPath
 }
@@ -93,14 +89,13 @@ func NewTxEvent(msg types.TxMsg) (event TxEvent) {
 	return event
 }
 
-
 func PublishTxEvent(msg types.TxMsg) {
 	event := NewTxEvent(msg)
 	txEventBus.Publish(event)
 }
 
 func SubscribeTxEvent(eventPath types.EventPath, name string, handler TxEventHandler) error {
-	wrap := func(event types.Event){
+	wrap := func(event types.Event) {
 		txEvt := event.(TxEvent)
 		handler(txEvt)
 	}
@@ -108,6 +103,6 @@ func SubscribeTxEvent(eventPath types.EventPath, name string, handler TxEventHan
 	return txEventBus.Subscribe(eventPath, name, wrap)
 }
 
-func UnsubscribeTxEvent(eventPath types.EventPath , name string) {
+func UnsubscribeTxEvent(eventPath types.EventPath, name string) {
 	txEventBus.Unsubscribe(eventPath, name)
 }

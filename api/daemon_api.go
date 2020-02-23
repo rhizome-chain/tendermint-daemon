@@ -37,7 +37,6 @@ func (api *DaemonAPI) SetHandlers(group *gin.RouterGroup) {
 	group.DELETE("job/:jobid", api.removeJob)
 }
 
-
 func (api *DaemonAPI) getInfoConfig(context *gin.Context) {
 	config := api.daemon.GetDaemonConfig()
 	
@@ -70,7 +69,6 @@ func (api *DaemonAPI) getInfoNode(context *gin.Context) {
 	context.Writer.Flush()
 }
 
-
 func (api *DaemonAPI) getInfoCluster(context *gin.Context) {
 	cluster := api.daemon.GetCluster()
 	
@@ -86,7 +84,6 @@ func (api *DaemonAPI) getInfoCluster(context *gin.Context) {
 	context.Writer.Write(bytes)
 	context.Writer.Flush()
 }
-
 
 func (api *DaemonAPI) getJobs(context *gin.Context) {
 	memberJobs, err := api.daemon.GetJobRepository().GetAllMemberJobIDs()
@@ -109,7 +106,6 @@ func (api *DaemonAPI) getJobs(context *gin.Context) {
 	context.Writer.Write(bytes)
 	context.Writer.Flush()
 }
-
 
 func (api *DaemonAPI) addJob(context *gin.Context) {
 	data, err := context.GetRawData()

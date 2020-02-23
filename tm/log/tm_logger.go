@@ -1,9 +1,9 @@
 package log
 
-
 import (
-	"io"
 	"fmt"
+	"io"
+	
 	kitlog "github.com/go-kit/kit/log"
 	kitlevel "github.com/go-kit/kit/log/level"
 	"github.com/go-kit/kit/log/term"
@@ -40,7 +40,7 @@ func NewTMLogger(w io.Writer) log.Logger {
 			return term.FgBgColor{}
 		}
 	}
-
+	
 	return &tmLogger{term.NewLogger(w, log.NewTMFmtLogger, colorFn)}
 }
 
@@ -87,4 +87,3 @@ func (l *tmLogger) Error(msg string, keyvals ...interface{}) {
 func (l *tmLogger) With(keyvals ...interface{}) log.Logger {
 	return &tmLogger{kitlog.With(l.srcLogger, keyvals...)}
 }
-

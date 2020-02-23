@@ -136,7 +136,7 @@ func (app *BaseApplication) getSpaceStoreAny(space string, path string) *store.S
 	storeRegistry, ok := app.spaces[space]
 	if !ok {
 		storeRegistry = app.registerSpace(space)
-		app.logger.Info(fmt.Sprintf("[WARN] Force to make Space[%s]",space))
+		app.logger.Info(fmt.Sprintf("[WARN] Force to make Space[%s]", space))
 	}
 	
 	return storeRegistry.GetOrMakeStore(path)

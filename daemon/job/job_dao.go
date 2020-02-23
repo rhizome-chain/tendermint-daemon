@@ -100,7 +100,7 @@ func (dao *jobDao) PutJob(job Job) (err error) {
 	
 	err = dao.client.BroadcastTxSync(msg)
 	if err != nil {
-		dao.logger.Error("PutJob " + job.ID, err)
+		dao.logger.Error("PutJob "+job.ID, err)
 	} else {
 		dao.logger.Info("PutJob", "jobID", job.ID)
 	}
@@ -121,7 +121,7 @@ func (dao *jobDao) RemoveJob(jobID string) (err error) {
 	msg.SetTxHash()
 	err = dao.client.BroadcastTxSync(msg)
 	if err != nil {
-		dao.logger.Error("RemoveJob " + jobID, err)
+		dao.logger.Error("RemoveJob "+jobID, err)
 	} else {
 		dao.logger.Info("RemoveJob", "jobID", jobID)
 	}
@@ -130,7 +130,7 @@ func (dao *jobDao) RemoveJob(jobID string) (err error) {
 
 // RemoveAllJobs ..
 func (dao *jobDao) RemoveAllJobs() (err error) {
-	jobIDs,err := dao.GetAllJobIDs()
+	jobIDs, err := dao.GetAllJobIDs()
 	if err != nil {
 		return err
 	}
@@ -188,8 +188,6 @@ func (dao *jobDao) GetAllJobs() (jobs map[string]Job, err error) {
 	return jobs, err
 }
 
-
 func (dao *jobDao) Commit() (err error) {
 	return dao.client.Commit()
 }
-

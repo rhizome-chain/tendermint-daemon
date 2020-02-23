@@ -2,11 +2,12 @@ package commands
 
 import (
 	"fmt"
-	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	"path/filepath"
-
+	
+	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
+	
 	"github.com/spf13/viper"
-
+	
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -21,13 +22,12 @@ import (
 
 // InitFilesCmd initialises a fresh Tendermint Core instance.
 
-
 func AddInitCommand(cmd *cobra.Command, daemonProvider *daemon.BaseProvider) {
 	// Create Init
 	cmd.AddCommand(NewInitCmd(daemonProvider))
 }
 
-func AddFlags(cmd *cobra.Command){
+func AddFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("force-rewrite", false, "force rewrite")
 	
 	cmd.Flags().String("chain-id", config.ChainID(), "Chain ID")
@@ -47,7 +47,7 @@ func NewInitCmd(daemonProvider *daemon.BaseProvider) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize Dist-Daemon on Tendermint",
-		RunE:  func(cmd *cobra.Command, args []string) error{
+		RunE: func(cmd *cobra.Command, args []string) error {
 			return initFilesWithConfig(config, daemonProvider)
 		},
 	}
@@ -71,7 +71,7 @@ func initFilesWithConfig(config *cfg.Config, daemonProvider *daemon.BaseProvider
 		logger.Info("Generated private validator", "keyFile", privValKeyFile,
 			"stateFile", privValStateFile)
 	}
-
+	
 	nodeKeyFile := config.NodeKeyFile()
 	if tmos.FileExists(nodeKeyFile) {
 		logger.Info("Found node key", "path", nodeKeyFile)
@@ -81,14 +81,14 @@ func initFilesWithConfig(config *cfg.Config, daemonProvider *daemon.BaseProvider
 		}
 		logger.Info("Generated node key", "path", nodeKeyFile)
 	}
-
+	
 	// genesis file
 	genFile := config.GenesisFile()
 	if tmos.FileExists(genFile) {
 		logger.Info("Found genesis file", "path", genFile)
 	} else {
 		chainID := viper.GetString("chain-id")
-
+		
 		if len(chainID) == 0 {
 			chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 		}
@@ -103,15 +103,14 @@ func initFilesWithConfig(config *cfg.Config, daemonProvider *daemon.BaseProvider
 			PubKey:  key,
 			Power:   10,
 		}}
-
+		
 		if err := genDoc.SaveAs(genFile); err != nil {
 			return err
 		}
 		logger.Info("Generated genesis file", "path", genFile)
 	}
-
+	
 	confFilePath := filepath.Join(config.RootDir, "config", "config.toml")
-
 	
 	if viper.GetBool("force-rewrite") || !tmos.FileExists(confFilePath) {
 		nodeName := viper.GetString("node-name")
@@ -121,13 +120,12 @@ func initFilesWithConfig(config *cfg.Config, daemonProvider *daemon.BaseProvider
 	}
 	
 	daemonConfig := &common.DaemonConfig{
-		ChainID:               config.ChainID(),
-		NodeName:              config.Moniker,
+		ChainID:  config.ChainID(),
+		NodeName: config.Moniker,
 	}
 	
 	viper.Unmarshal(daemonConfig)
 	
-	
-	daemonProvider.InitFiles(config,daemonConfig)
+	daemonProvider.InitFiles(config, daemonConfig)
 	return nil
 }

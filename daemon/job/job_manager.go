@@ -11,7 +11,7 @@ type Manager struct {
 	common.Context
 	nodeID string
 	dao    Repository
-	//logger log.Logger
+	// logger log.Logger
 }
 
 // NewManager ..
@@ -34,21 +34,19 @@ func (manager *Manager) Start() {
 		jobsChanged = true
 	})
 	
-	
 	tmevents.SubscribeBlockEvent(tmevents.EndBlockEventPath, "job-checkJobsChanged", func(event types.Event) {
 		if jobsChanged {
 			endBlockEvent := event.(tmevents.EndBlockEvent)
 			
-			manager.Info("[JobManager] Jobs changed.", "height",endBlockEvent.Height )
+			manager.Info("[JobManager] Jobs changed.", "height", endBlockEvent.Height)
 			
 			common.PublishDaemonEvent(JobsChangedEvent{
-				BlockHeight:endBlockEvent.Height,
+				BlockHeight: endBlockEvent.Height,
 			})
 			
 			jobsChanged = false
 		}
 	})
-	
 	
 	memJobsEvtPath := tmevents.MakeTxEventPath(common.SpaceDaemon, PathMemberJobs, manager.nodeID)
 	
@@ -56,7 +54,7 @@ func (manager *Manager) Start() {
 		nodeID := string(event.Key)
 		
 		jobIDs, err := manager.dao.GetMemberJobIDs(nodeID)
-		if err != nil  && !types.IsNoDataError(err){
+		if err != nil && !types.IsNoDataError(err) {
 			manager.Error("[JobManager GetAllJobIDs", err)
 		}
 		common.PublishDaemonEvent(MemberJobsChangedEvent{

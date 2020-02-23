@@ -2,10 +2,11 @@ package cluster
 
 import (
 	"fmt"
+	"time"
+	
 	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	tmevents "github.com/rhizome-chain/tendermint-daemon/tm/events"
 	"github.com/rhizome-chain/tendermint-daemon/types"
-	"time"
 )
 
 type Manager struct {
@@ -16,14 +17,14 @@ type Manager struct {
 }
 
 func NewManager(context common.Context) *Manager {
-	//config common.DaemonConfig, logger log.Logger, client types.Client
+	// config common.DaemonConfig, logger log.Logger, client types.Client
 	cluster := newCluster(context.GetConfig().ChainID)
 	dao := NewRepository(context.GetConfig(), context, context.GetClient())
 	
 	manager := &Manager{
 		Context: context,
-		//config:  config,
-		//logger:  logger,
+		// config:  config,
+		// logger:  logger,
 		cluster: cluster,
 		dao:     dao,
 	}

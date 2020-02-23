@@ -2,6 +2,7 @@ package job
 
 import (
 	"fmt"
+	
 	"github.com/tendermint/tendermint/libs/log"
 )
 

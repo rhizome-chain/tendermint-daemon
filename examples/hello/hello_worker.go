@@ -18,7 +18,7 @@ type Factory struct {
 
 var _ worker.Factory = (*Factory)(nil)
 
-func (fac *Factory) Name() string { return FactoryName }
+func (fac *Factory) Name() string  { return FactoryName }
 func (fac *Factory) Space() string { return worker.SpaceDefaultWorker }
 
 func (fac *Factory) NewWorker(helper *worker.Helper) (worker.Worker, error) {

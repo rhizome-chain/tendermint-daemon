@@ -24,7 +24,7 @@ type Daemon struct {
 	client                types.Client
 	context               common.Context
 	config                common.DaemonConfig
-	modules               []Module
+	modules               map[string]Module
 	spaceRegistry         types.SpaceRegistry
 	clusterManager        *cluster.Manager
 	jobManager            *job.Manager
@@ -35,7 +35,7 @@ type Daemon struct {
 }
 
 func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config common.DaemonConfig,
-	spaceRegistry types.SpaceRegistry, modules []Module) (dm *Daemon) {
+	spaceRegistry types.SpaceRegistry) (dm *Daemon) {
 	ctx := common.NewContext(tmCfg, logger, tmNode, config)
 	dm = &Daemon{
 		context: ctx,
@@ -43,7 +43,7 @@ func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config c
 		tmCfg:   tmCfg,
 		logger:  logger,
 		tmNode:  tmNode,
-		modules: modules,
+		modules: make(map[string]Module),
 	}
 	
 	dm.client = ctx.GetClient()
@@ -57,17 +57,23 @@ func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config c
 	dm.jobManager = job.NewManager(ctx)
 	dm.workerManager = worker.NewManager(ctx, spaceRegistry)
 	
-	if modules != nil {
-		for _, module := range modules {
-			module.Init(tmCfg)
-			for _, fac := range module.Factories() {
-				dm.workerManager.RegisterWorkerFactory(fac)
-			}
-			dm.logger.Info(fmt.Sprintf("Init Module."),"config", module.GetConfig())
-		}
-	}
-	
 	return dm
+}
+
+func (dm *Daemon) GetModule(name string) Module {
+	module, ok := dm.modules[name]
+	if !ok {
+		panic(fmt.Sprintf("Module named '%s' is not registered.", name))
+	}
+	return module
+}
+
+func (dm *Daemon) AddModule(module Module) {
+	_, ok := dm.modules[module.Name()]
+	if ok {
+		panic(fmt.Sprintf("Module named '%s' is already registered.", module.Name()))
+	}
+	dm.modules[module.Name()] = module
 }
 
 func (dm *Daemon) GetTMConfig() cfg.Config {

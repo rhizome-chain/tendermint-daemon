@@ -9,30 +9,26 @@ import (
 )
 
 type Module interface {
-	GetDefaultConfig() types.ModuleConfig
+	Name() string
 	Factories() (facs []worker.Factory)
-	AddFlags(cmd *cobra.Command)
-	BeforeDaemonStarting(cmd *cobra.Command, dm *Daemon)
-	AfterDaemonStarted(dm *Daemon)
-	InitFile(config *config.Config)
-	//LoadFile(config *config.Config)
 	Init(config *config.Config)
 	GetConfig() types.ModuleConfig
+	BeforeDaemonStarting(cmd *cobra.Command, dm *Daemon)
+	AfterDaemonStarted(dm *Daemon)
 }
 
 type BaseModule struct {
+}
 
+func (b BaseModule) Name() string {
+	return "base-module"
 }
 
 func (b BaseModule) Init(config *config.Config) {
-	//DO NOTHING
+	// To be implemented
 }
 
 func (b BaseModule) GetConfig() types.ModuleConfig {
-	return &types.EmptyModuleConfig{}
-}
-
-func (b BaseModule) GetDefaultConfig() types.ModuleConfig {
 	return &types.EmptyModuleConfig{}
 }
 
@@ -40,19 +36,11 @@ func (b BaseModule) Factories() (facs []worker.Factory) {
 	return []worker.Factory{}
 }
 
-func (b BaseModule) AddFlags(cmd *cobra.Command) {
-	// To be implemented
-}
-
 func (b BaseModule) BeforeDaemonStarting(cmd *cobra.Command, dm *Daemon) {
 	// To be implemented
 }
 
 func (b BaseModule) AfterDaemonStarted(dm *Daemon) {
-	// To be implemented
-}
-
-func (b BaseModule) InitFile(config *config.Config) {
 	// To be implemented
 }
 

@@ -12,7 +12,7 @@ import (
 const (
 	PathMember    = "member"
 	PathHeartbeat = "heartbeat"
-	PathLeader = "leader"
+	PathLeader    = "leader"
 )
 
 // clusterDao kv store model for job
@@ -65,7 +65,7 @@ func (dao *clusterDao) HasMember(nodeID string) (ok bool) {
 // PutLeader set leader
 func (dao *clusterDao) PutLeader(leader string) (err error) {
 	msg := types.NewTxMsg(types.TxSet, common.SpaceDaemon, PathLeader, "", []byte(leader))
-	//fmt.Println(" -------- PutLeader :", leader)
+	// fmt.Println(" -------- PutLeader :", leader)
 	return dao.client.BroadcastTxSync(msg)
 }
 
@@ -95,7 +95,6 @@ func (dao *clusterDao) GetAllMembers() (members []*Member, err error) {
 	
 	return members, err
 }
-
 
 func (dao *clusterDao) PutHeartbeat(nodeID string) (err error) {
 	bytes, err := types.BasicCdc.MarshalBinaryBare(time.Now())

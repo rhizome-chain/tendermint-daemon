@@ -64,7 +64,7 @@ func (msg *TxMsg) GetTypeString() string {
 }
 
 // to avoid 'tx already exists in cache' problem
-func (msg *TxMsg) SetTxHash()  {
+func (msg *TxMsg) SetTxHash() {
 	msg.TxHash = time.Now().UnixNano()
 }
 

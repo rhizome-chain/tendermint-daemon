@@ -2,13 +2,14 @@ package tm
 
 import (
 	"fmt"
+	"os"
+	
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
-	"os"
 )
 
 type Provider func(*cfg.Config, log.Logger) (tmNode *node.Node, dapp *DaemonApp, err error)
@@ -16,11 +17,11 @@ type Provider func(*cfg.Config, log.Logger) (tmNode *node.Node, dapp *DaemonApp,
 type NodeProvider struct {
 }
 
-func (provider *NodeProvider)NewNode(config *cfg.Config, logger log.Logger) (tmNode *node.Node, dapp *DaemonApp, err error) {
+func (provider *NodeProvider) NewNode(config *cfg.Config, logger log.Logger) (tmNode *node.Node, dapp *DaemonApp, err error) {
 	// Generate node PrivKey
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
-		return nil,nil, err
+		return nil, nil, err
 	}
 	
 	// Convert old PrivValidator if it exists.
@@ -40,7 +41,7 @@ func (provider *NodeProvider)NewNode(config *cfg.Config, logger log.Logger) (tmN
 		oldPV.Upgrade(newPrivValKey, newPrivValState)
 	}
 	
-	dapp = NewDaemonApplication( config, logger)
+	dapp = NewDaemonApplication(config, logger)
 	
 	tmNode, err = node.NewNode(config,
 		privval.LoadOrGenFilePV(newPrivValKey, newPrivValState),
