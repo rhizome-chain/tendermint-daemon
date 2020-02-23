@@ -39,7 +39,7 @@ func (dao *clusterDao) PutMember(member *Member) (err error) {
 	
 	dao.logger.Info("PutMember :", "member", member)
 	
-	msg := types.NewTxMsg(types.TxSet, common.SpaceDaemon, PathMember, member.NodeID, bytes)
+	msg := types.NewTxMsg(types.TxSetSync, common.SpaceDaemon, PathMember, member.NodeID, bytes)
 	
 	return dao.client.BroadcastTxSync(msg)
 }
@@ -64,7 +64,7 @@ func (dao *clusterDao) HasMember(nodeID string) (ok bool) {
 
 // PutLeader set leader
 func (dao *clusterDao) PutLeader(leader string) (err error) {
-	msg := types.NewTxMsg(types.TxSet, common.SpaceDaemon, PathLeader, "", []byte(leader))
+	msg := types.NewTxMsg(types.TxSetSync, common.SpaceDaemon, PathLeader, "", []byte(leader))
 	// fmt.Println(" -------- PutLeader :", leader)
 	return dao.client.BroadcastTxSync(msg)
 }

@@ -197,19 +197,19 @@ func (registry *factoryRegistry) GetFactory(name string) (factory Factory, err e
 	return factory, err
 }
 
-// NewWorker implements worker.Factory.NewWorker
-func (registry *factoryRegistry) NewWorker(helper *Helper) (worker Worker, err error) {
-	job := helper.Job()
-	if len(job.FactoryName) == 0 {
-		err = errors.New("job must have FactoryName")
-		return nil, err
-	}
-	
-	factory, err := registry.GetFactory(job.FactoryName)
-	if err != nil {
-		return nil, err
-	}
-	
-	return factory.NewWorker(helper)
-	
-}
+// // NewWorker implements worker.Factory.NewWorker
+// func (registry *factoryRegistry) NewWorker(helper *Helper) (worker Worker, err error) {
+// 	job := helper.Job()
+// 	if len(job.FactoryName) == 0 {
+// 		err = errors.New("job must have FactoryName")
+// 		return nil, err
+// 	}
+//
+// 	factory, err := registry.GetFactory(job.FactoryName)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	return factory.NewWorker(helper)
+//
+// }
