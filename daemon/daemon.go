@@ -30,9 +30,10 @@ type Daemon struct {
 	jobManager            *job.Manager
 	workerManager         *worker.Manager
 	jobOrganizer          job.Organizer
-	BeforeStartingHandler func(dm *Daemon)
-	AfterStartedHandler   func(dm *Daemon)
+	beforeStartingHandler func(dm *Daemon)
 }
+
+var _ worker.ProxyProvider = (*Daemon)(nil)
 
 func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config common.DaemonConfig,
 	spaceRegistry types.SpaceRegistry) (dm *Daemon) {
@@ -55,7 +56,7 @@ func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config c
 	dm.clusterManager = cluster.NewManager(ctx)
 	ctx.SetClusterState(dm.clusterManager.GetCluster())
 	dm.jobManager = job.NewManager(ctx)
-	dm.workerManager = worker.NewManager(ctx, spaceRegistry)
+	dm.workerManager = worker.NewManager(ctx, spaceRegistry, dm)
 	
 	return dm
 }
@@ -103,8 +104,8 @@ func (dm *Daemon) Start() {
 		
 		dm.logger.Info("[Dist-Daemon] Starting Daemon...", "node_id", dm.tmNode.NodeInfo().ID())
 		
-		if dm.BeforeStartingHandler != nil {
-			dm.BeforeStartingHandler(dm)
+		if dm.beforeStartingHandler != nil {
+			dm.beforeStartingHandler(dm)
 		}
 		
 		dm.clusterManager.Start()
@@ -129,8 +130,8 @@ func (dm *Daemon) Start() {
 			"daemon-onJobsChanged",
 			dm.onJobsChanged)
 		
-		if dm.AfterStartedHandler != nil {
-			dm.AfterStartedHandler(dm)
+		for _, module := range dm.modules {
+			module.AfterDaemonStarted(dm)
 		}
 		
 		dm.checkJobsAndAllocate()

@@ -212,11 +212,10 @@ func (manager *Manager) IsLeaderNode() bool {
 
 func (manager *Manager) onLeaderChanged(leader *Member) {
 	if manager.cluster.localMember == leader {
-		manager.Info("[INFO-Cluster] Leader changed. I'm the leader")
+		manager.Info("[INFO-Cluster] Leader changed. I'm the leader", "leader",leader.NodeID )
 		manager.cluster.localMember.SetLeader(true)
 	} else {
-		manager.Info("[INFO-Cluster] Leader is set", "leader",
-			manager.cluster.leader.NodeID)
+		manager.Info("[INFO-Cluster] Leader is set", "leader", leader.NodeID)
 	}
 	
 	common.PublishDaemonEvent(LeaderChangedEvent{

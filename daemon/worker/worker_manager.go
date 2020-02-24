@@ -20,12 +20,13 @@ type Manager struct {
 	facReg        *factoryRegistry
 	workers       map[string]Worker
 	spaceRegistry types.SpaceRegistry
+	proxyProvider ProxyProvider
 }
 
 // NewManager ..
-func NewManager(context common.Context, spaceRegistry types.SpaceRegistry) *Manager {
+func NewManager(context common.Context, spaceRegistry types.SpaceRegistry, proxyProvider ProxyProvider) *Manager {
 	dao := NewRepository(context.GetConfig(), context, context.GetClient())
-	manager := Manager{Context: context, dao: dao, logger: context, spaceRegistry: spaceRegistry}
+	manager := Manager{Context: context, dao: dao, logger: context, spaceRegistry: spaceRegistry, proxyProvider: proxyProvider}
 	manager.facReg = NewFactoryRegistry()
 	manager.workers = make(map[string]Worker)
 	return &manager
@@ -80,7 +81,7 @@ func (manager *Manager) NewWorkerProxy(job job.Job) (proxy Proxy, err error) {
 		return nil, err
 	}
 	
-	helper := NewHelper(fac.Space(), manager.config, manager.logger, job, manager.dao)
+	helper := NewHelper(fac.Space(), manager.config, manager.logger, job, manager.dao, manager.proxyProvider)
 	
 	proxy = NewBaseProxy(job, helper)
 	
@@ -112,7 +113,7 @@ func (manager *Manager) newWorker(job job.Job) (Worker, error) {
 		return nil, err
 	}
 	
-	helper := NewHelper(fac.Space(), manager.config, manager.logger, job, manager.dao)
+	helper := NewHelper(fac.Space(), manager.config, manager.logger, job, manager.dao, manager.proxyProvider)
 	
 	worker, err := fac.NewWorker(helper)
 	

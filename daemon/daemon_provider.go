@@ -67,15 +67,9 @@ func (provider *BaseProvider) NewDaemon(cmd *cobra.Command, tmCfg *cfg.Config, l
 	}
 	
 	if dm.modules != nil {
-		dm.BeforeStartingHandler = func(dm *Daemon) {
+		dm.beforeStartingHandler = func(dm *Daemon) {
 			for _, module := range dm.modules {
 				module.BeforeDaemonStarting(cmd, dm)
-			}
-		}
-		
-		dm.AfterStartedHandler = func(dm *Daemon) {
-			for _, module := range dm.modules {
-				module.AfterDaemonStarted(dm)
 			}
 		}
 	}

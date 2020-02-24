@@ -56,18 +56,34 @@ type Factory interface {
 	NewWorker(helper *Helper) (Worker, error)
 }
 
+// Proxy for worker
+type Proxy interface {
+	GetJob() job.Job
+	GetCheckpoint(checkpoint interface{}) error
+	GetData(topic string, rowID string) (data []byte, err error)
+	GetObject(topic string, rowID string, data interface{}) error
+	GetDataList(topic string, handler DataHandler) error
+	DeleteData(topic string, rowID string) error
+}
+
+type ProxyProvider interface {
+	NewWorkerProxy(jobID string) (Proxy, error)
+}
+
 // Helper ..
 type Helper struct {
-	space  string
-	config common.DaemonConfig
-	logger log.Logger
-	job    job.Job
-	dao    Repository
+	space         string
+	config        common.DaemonConfig
+	logger        log.Logger
+	job           job.Job
+	dao           Repository
+	proxyProvider ProxyProvider
 }
 
 // NewHelper ..
-func NewHelper(space string, config common.DaemonConfig, logger log.Logger, job job.Job, dao Repository) *Helper {
-	helper := Helper{space: space, config: config, logger: logger, job: job, dao: dao}
+func NewHelper(space string, config common.DaemonConfig, logger log.Logger, job job.Job,
+	dao Repository, proxyProvider ProxyProvider) *Helper {
+	helper := Helper{space: space, config: config, logger: logger, job: job, dao: dao, proxyProvider: proxyProvider}
 	return &helper
 }
 
@@ -161,6 +177,11 @@ func (helper *Helper) GetDataList(topic string, handler DataHandler) error {
 // DeleteData ..
 func (helper *Helper) DeleteData(topic string, rowID string) error {
 	return helper.dao.DeleteData(helper.space, helper.ID(), topic, rowID)
+}
+
+// NewWorkerProxy ..
+func (helper *Helper) NewWorkerProxy(jobID string) (Proxy, error) {
+	return helper.proxyProvider.NewWorkerProxy(jobID)
 }
 
 type factoryRegistry struct {

@@ -4,15 +4,6 @@ import (
 	"github.com/rhizome-chain/tendermint-daemon/daemon/job"
 )
 
-// Proxy for worker
-type Proxy interface {
-	GetJob() job.Job
-	GetCheckpoint(checkpoint interface{}) error
-	GetData(topic string, rowID string) (data []byte, err error)
-	GetObject(topic string, rowID string, data interface{}) error
-	GetDataList(topic string, handler DataHandler) error
-	DeleteData(topic string, rowID string) error
-}
 
 type BaseProxy struct {
 	job    job.Job
