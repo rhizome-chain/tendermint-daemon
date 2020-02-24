@@ -154,6 +154,16 @@ func (dm *Daemon) IsLeaderNode() bool { return dm.clusterManager.IsLeaderNode() 
 
 func (dm *Daemon) GetJobRepository() job.Repository { return dm.jobManager.GetRepository() }
 
+func (dm *Daemon) NewWorkerProxy(jobID string) (worker.Proxy, error) {
+	job, err := dm.GetJobRepository().GetJob(jobID)
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	return dm.workerManager.NewWorkerProxy(job)
+}
+
 // member's jobs changed event handler
 func (dm *Daemon) onMemberChanged(event types.Event) {
 	dm.logger.Debug(" - [Daemon] onMemberChanged :", event)

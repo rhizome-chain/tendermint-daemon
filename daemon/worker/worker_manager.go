@@ -56,6 +56,37 @@ func (manager *Manager) GetWorker(id string) Worker {
 	return manager.workers[id]
 }
 
+func (manager *Manager) GetWorkerNames() []string {
+	names := []string{}
+	for n, _ := range manager.workers {
+		names = append(names, n)
+	}
+	return names
+}
+
+func (manager *Manager) GetWorkers() []Worker {
+	workers := []Worker{}
+	for _, w := range manager.workers {
+		workers = append(workers, w)
+	}
+	return workers
+}
+
+func (manager *Manager) NewWorkerProxy(job job.Job) (proxy Proxy, err error) {
+	fac, err := manager.facReg.GetFactory(job.FactoryName)
+	
+	if err != nil {
+		manager.logger.Error(fmt.Sprintf("cannot find worker factory '%s'", job.FactoryName), err)
+		return nil, err
+	}
+	
+	helper := NewHelper(fac.Space(), manager.config, manager.logger, job, manager.dao)
+	
+	proxy = NewBaseProxy(job, helper)
+	
+	return proxy, nil
+}
+
 // registerWorker ..
 func (manager *Manager) registerWorker(job job.Job) error {
 	if manager.workers[job.ID] != nil {
@@ -75,15 +106,13 @@ func (manager *Manager) registerWorker(job job.Job) error {
 
 func (manager *Manager) newWorker(job job.Job) (Worker, error) {
 	fac, err := manager.facReg.GetFactory(job.FactoryName)
-	if err != nil {
-		return nil, err
-	}
-	helper := NewHelper(fac.Space(), manager.config, manager.logger, job, manager.dao)
 	
 	if err != nil {
 		manager.logger.Error(fmt.Sprintf("cannot find worker factory '%s'", job.FactoryName), err)
 		return nil, err
 	}
+	
+	helper := NewHelper(fac.Space(), manager.config, manager.logger, job, manager.dao)
 	
 	worker, err := fac.NewWorker(helper)
 	

@@ -149,8 +149,8 @@ func (helper *Helper) GetData(topic string, rowID string) (data []byte, err erro
 }
 
 // GetObject ..
-func (helper *Helper) GetObject(topic string, rowID string, data interface{}) error {
-	return helper.dao.GetObject(helper.space, helper.ID(), topic, rowID, data)
+func (helper *Helper) GetObject(topic string, rowID string, ptr interface{}) error {
+	return helper.dao.GetObject(helper.space, helper.ID(), topic, rowID, ptr)
 }
 
 // GetDataList ..

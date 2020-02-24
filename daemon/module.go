@@ -8,6 +8,7 @@ import (
 	"github.com/rhizome-chain/tendermint-daemon/types"
 )
 
+// 존재 이유가 약함
 type Module interface {
 	Name() string
 	GetFactory(name string) worker.Factory

@@ -115,8 +115,8 @@ func (dao *clusterDao) GetHeartbeats(handler func(nodeid string, blockHeight int
 		err = dao.client.UnmarshalObject(value, &heartbeat)
 		
 		if err != nil {
-			dao.logger.Error("GetHeartbeats unmarshal heartbeat", "key=", string(key),
-				"value=", value, err)
+			dao.logger.Error("GetHeartbeats unmarshal heartbeat", "key", string(key),
+				"value", value, "err", err)
 		} else {
 			handler(nodeid, heartbeat)
 		}
