@@ -39,6 +39,7 @@ func AddFlags(cmd *cobra.Command) {
 	cmd.Flags().Int("mempool.size", config.Mempool.Size, "mempool.size")
 	cmd.Flags().Int64("mempool.max_txs_bytes", config.Mempool.MaxTxsBytes, "mempool.max_txs_bytes")
 	cmd.Flags().Int("mempool.max_tx_bytes", config.Mempool.MaxTxBytes, "mempool.max_tx_bytes")
+	cmd.Flags().String("consensus.timeout_commit", "1s", "consensus timeout_commit")
 	cmd.Flags().String("instrumentation.prometheus_listen_addr", config.Instrumentation.PrometheusListenAddr, "instrumentation.prometheus_listen_addr")
 	
 }

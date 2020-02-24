@@ -10,6 +10,14 @@ import (
 )
 
 type Module struct {
+	factory *Factory
+}
+
+func (e *Module) GetFactory(name string) worker.Factory {
+	if name == FactoryName {
+		return e.factory
+	}
+	return nil
 }
 
 func (e *Module) Name() string {
@@ -22,7 +30,7 @@ func (e *Module) GetConfig() types.ModuleConfig {
 }
 
 func (e *Module) Init(config *config.Config) {
-	// DO NOTHING
+	e.factory = &Factory{}
 }
 
 func (e *Module) BeforeDaemonStarting(cmd *cobra.Command, dm *daemon.Daemon) {
@@ -34,7 +42,7 @@ func (e *Module) AfterDaemonStarted(dm *daemon.Daemon) {
 }
 
 func (e *Module) Factories() (facs []worker.Factory) {
-	return []worker.Factory{&Factory{}}
+	return []worker.Factory{e.factory}
 }
 
 var _ daemon.Module = (*Module)(nil)

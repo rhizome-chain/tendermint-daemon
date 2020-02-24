@@ -18,26 +18,30 @@ const (
 
 const (
 	flagAliveThreshold = "daemon_alive_threshold"
+	flagDelMemberThreshold = "daemon_del_member_threshold"
 	flagApiAddr        = "daemon_api_addr"
 )
 
 type DaemonConfig struct {
-	ChainID               string
-	NodeID                string
-	NodeName              string
-	APIAddr               string `mapstructure:"daemon_api_addr"`
-	AliveThresholdSeconds uint   `mapstructure:"daemon_alive_threshold"`
+	ChainID                  string
+	NodeID                   string
+	NodeName                 string
+	APIAddr                  string `mapstructure:"daemon_api_addr"`
+	AliveThresholdBlocks     uint   `mapstructure:"daemon_alive_threshold"`
+	DelMemberThresholdBlocks uint   `mapstructure:"daemon_del_member_threshold"`
 }
 
 func NewDaemonConfig() *DaemonConfig {
 	conf := &DaemonConfig{
-		AliveThresholdSeconds: uint(2),
+		AliveThresholdBlocks: uint(2),
+		DelMemberThresholdBlocks: uint(15),
 	}
 	return conf
 }
 
 func AddDaemonFlags(cmd *cobra.Command) {
-	cmd.Flags().Uint(flagAliveThreshold, 2, "Alive Threshold Seconds")
+	cmd.Flags().Uint(flagAliveThreshold, 2, "Alive Threshold Blocks")
+	cmd.Flags().Uint(flagDelMemberThreshold, 15, "Delete Member Threshold Blocks")
 	cmd.Flags().String(flagApiAddr, "0.0.0.0:7777", "API Service ip:port")
 }
 
@@ -75,5 +79,6 @@ var daemonConfigTemplate = `#Daemon config
 # For more information, see https://github.com/toml-lang/toml
 
 daemon_api_addr = "{{ .APIAddr }}"
-daemon_alive_threshold = "{{ .AliveThresholdSeconds }}"
+daemon_alive_threshold = "{{ .AliveThresholdBlocks }}"
+daemon_del_member_threshold = "{{ .DelMemberThresholdBlocks }}"
 `

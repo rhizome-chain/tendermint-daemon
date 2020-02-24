@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 	
 	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	
@@ -22,8 +21,8 @@ type Repository interface {
 	PutLeader(leader string) (err error)
 	GetLeader() (leader string, err error)
 	GetAllMembers() (members []*Member, err error)
-	PutHeartbeat(nodeID string) (err error)
-	GetHeartbeats(handler func(nodeid string, time time.Time)) (err error)
+	PutHeartbeat(nodeID string, blockHeight int64) (err error)
+	GetHeartbeats(handler func(nodeid string, blockHeight int64)) (err error)
 }
 
 // Cluster ..
@@ -130,7 +129,7 @@ func (cluster *Cluster) IsLeader() bool {
 type Member struct {
 	NodeID    string    `json:"nodeid"`
 	Name      string    `json:"name"`
-	heartbeat time.Time `json:"heartbeat"`
+	heartbeat int64     // transient field
 	leader    bool      // transient field
 	alive     bool      // transient field
 	local     bool      // transient field
@@ -175,12 +174,12 @@ func (m *Member) SetLocal(local bool) {
 }
 
 // SetLocal Set member alive
-func (m *Member) SetHeartbeat(time time.Time) {
-	m.heartbeat = time
+func (m *Member) SetHeartbeat(blockHeight int64) {
+	m.heartbeat = blockHeight
 }
 
 // SetLocal Set member alive
-func (m *Member) Heartbeat() time.Time {
+func (m *Member) Heartbeat() int64 {
 	return m.heartbeat
 }
 

@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"fmt"
-	"time"
 	
 	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
 	tmevents "github.com/rhizome-chain/tendermint-daemon/tm/events"
@@ -32,7 +31,7 @@ func NewManager(context common.Context) *Manager {
 	localMemb := Member{
 		NodeID:    context.GetConfig().NodeID,
 		Name:      context.GetConfig().NodeName,
-		heartbeat: time.Now(),
+		heartbeat: context.LastBlockIndex(),
 		leader:    false,
 		alive:     true,
 		local:     true,
@@ -54,7 +53,7 @@ func (manager *Manager) Start() {
 		panic(err)
 	}
 	
-	err = manager.dao.PutHeartbeat(manager.GetNodeID())
+	err = manager.dao.PutHeartbeat(manager.GetNodeID(), manager.Context.LastBlockIndex())
 	
 	if err != nil {
 		manager.Error("Cannot send Heartbeat.", err)
@@ -63,7 +62,9 @@ func (manager *Manager) Start() {
 	
 	tmevents.SubscribeBlockEvent(tmevents.BeginBlockEventPath, "cluster-heartbeat", func(event types.Event) {
 		// fmt.Println("heartbeat ", event)
-		err := manager.dao.PutHeartbeat(manager.GetNodeID())
+		blockEvent := event.(tmevents.BeginBlockEvent)
+		
+		err := manager.dao.PutHeartbeat(manager.GetNodeID(),blockEvent.Height)
 		if err != nil {
 			manager.Error("Cannot send Heartbeat.", err)
 		}
@@ -71,12 +72,14 @@ func (manager *Manager) Start() {
 	
 	tmevents.SubscribeBlockEvent(tmevents.EndBlockEventPath, "cluster-checkMembers", func(event types.Event) {
 		changed := false
-		err := manager.dao.GetHeartbeats(func(nodeid string, tm time.Time) {
-			c := manager.handleHeartbeat(nodeid, tm)
+		blockEvent := event.(tmevents.EndBlockEvent)
+		err := manager.dao.GetHeartbeats(func(nodeid string, blockHeight int64) {
+			c := manager.handleHeartbeat(nodeid, blockHeight, blockEvent.Height)
 			if c {
 				changed = true
 			}
 		})
+		
 		if err != nil {
 			manager.Error("[FATAL] Cannot check heartbeats.", err)
 		}
@@ -92,7 +95,7 @@ func (manager *Manager) Start() {
 }
 
 // returns true if member state changed
-func (manager *Manager) handleHeartbeat(nodeid string, tm time.Time) (changed bool) {
+func (manager *Manager) handleHeartbeat(nodeid string, heartbeat int64, blockHeight int64) (changed bool) {
 	member := manager.cluster.GetMember(nodeid)
 	if member == nil {
 		memb, err := manager.dao.GetMember(nodeid)
@@ -108,19 +111,17 @@ func (manager *Manager) handleHeartbeat(nodeid string, tm time.Time) (changed bo
 	
 	if member.IsLocal() {
 		member.SetAlive(true)
-	} else if member.Heartbeat().IsZero() || tm.Equal(member.Heartbeat()) {
-		gap := time.Now().Sub(tm).Seconds()
-		if gap > float64(manager.GetConfig().AliveThresholdSeconds) {
-			manager.Info(fmt.Sprintf("Member[%s] haven't sent heartbeat for %f seconds.", member.NodeID, gap))
+	} else  {
+		gap := blockHeight - heartbeat
+		if gap > int64(manager.GetConfig().AliveThresholdBlocks) {
+			manager.Info(fmt.Sprintf("Member[%s:%s] haven't sent heartbeat for %d blocks.", member.Name, member.NodeID, gap))
 			member.SetAlive(false)
 		} else {
 			member.SetAlive(true)
 		}
-	} else {
-		member.SetAlive(true)
 	}
 	
-	member.SetHeartbeat(tm)
+	member.SetHeartbeat(heartbeat)
 	
 	changed = oldAlive != member.IsAlive()
 	

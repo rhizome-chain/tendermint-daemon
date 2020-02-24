@@ -97,6 +97,23 @@ func (dao *workerDao) PutObject(space string, jobID string, topic string, rowID 
 	return dao.PutData(space, jobID, topic, rowID, dataBytes)
 }
 
+// PutData put data to {space}
+func (dao *workerDao) PutDataSync(space string, jobID string, topic string, rowID string, data []byte) error {
+	fullPath := makeDataPath(jobID, topic)
+	msg := types.NewTxMsg(types.TxSetSync, space, fullPath, rowID, data)
+	return dao.client.BroadcastTxSync(msg)
+}
+
+// PutObject data type must be registered to Codec
+func (dao *workerDao) PutObjectSync(space string, jobID string, topic string, rowID string, data interface{}) error {
+	dataBytes, err := dao.client.MarshalObject(data)
+	if err != nil {
+		dao.logger.Error("[ERROR-WorkerDao] PutObjectSync marshal", err)
+	}
+	// fmt.Println("&&&&& PutObject :: key=", key, ", data=", data)
+	return dao.PutDataSync(space, jobID, topic, rowID, dataBytes)
+}
+
 // GetData ..
 func (dao *workerDao) GetData(space string, jobID string, topic string, rowID string) (data []byte, err error) {
 	fullPath := makeDataPath(jobID, topic)

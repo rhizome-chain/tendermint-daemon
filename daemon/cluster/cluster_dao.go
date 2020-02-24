@@ -1,8 +1,6 @@
 package cluster
 
 import (
-	"time"
-	
 	"github.com/tendermint/tendermint/libs/log"
 	
 	"github.com/rhizome-chain/tendermint-daemon/daemon/common"
@@ -96,31 +94,31 @@ func (dao *clusterDao) GetAllMembers() (members []*Member, err error) {
 	return members, err
 }
 
-func (dao *clusterDao) PutHeartbeat(nodeID string) (err error) {
-	bytes, err := types.BasicCdc.MarshalBinaryBare(time.Now())
+func (dao *clusterDao) PutHeartbeat(nodeID string, blockHeight int64) (err error) {
+	bytes, err := types.BasicCdc.MarshalBinaryBare(blockHeight)
 	
 	if err != nil {
 		dao.logger.Error("PutHeartbeat : Member : ", err)
 		return err
 	}
 	
-	msg := types.NewTxMsg(types.TxSet, common.SpaceDaemon, PathHeartbeat, nodeID, bytes)
+	msg := types.NewTxMsg(types.TxSetSync, common.SpaceDaemon, PathHeartbeat, nodeID, bytes)
 	
-	return dao.client.BroadcastTxAsync(msg)
+	return dao.client.BroadcastTxSync(msg)
 }
 
-func (dao *clusterDao) GetHeartbeats(handler func(nodeid string, time time.Time)) (err error) {
+func (dao *clusterDao) GetHeartbeats(handler func(nodeid string, blockHeight int64)) (err error) {
 	msg := types.NewViewMsgMany(common.SpaceDaemon, PathHeartbeat, "", "")
 	err = dao.client.GetMany(msg, func(key []byte, value []byte) bool {
-		time := time.Time{}
+		var heartbeat int64
 		nodeid := string(key)
-		err = dao.client.UnmarshalObject(value, &time)
+		err = dao.client.UnmarshalObject(value, &heartbeat)
 		
 		if err != nil {
-			dao.logger.Error("GetHeartbeats unmarshal time", "key", string(key),
-				"value", string(value), err)
+			dao.logger.Error("GetHeartbeats unmarshal heartbeat", "key=", string(key),
+				"value=", value, err)
 		} else {
-			handler(nodeid, time)
+			handler(nodeid, heartbeat)
 		}
 		
 		return true

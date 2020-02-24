@@ -3,6 +3,9 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"github.com/tendermint/tendermint/mempool"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"time"
 	
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/bytes"
@@ -13,6 +16,15 @@ import (
 	"github.com/rhizome-chain/tendermint-daemon/tm/tmcom"
 	"github.com/rhizome-chain/tendermint-daemon/types"
 )
+
+func IsErrMempoolIsFull(err error) bool {
+	_, ok := err.(mempool.ErrMempoolIsFull)
+	return ok
+}
+
+func IsErrTxInCache(err error) bool {
+	return err == mempool.ErrTxInCache
+}
 
 type TMClient struct {
 	config *cfg.Config
@@ -26,6 +38,20 @@ func NewClient(config *cfg.Config, logger log.Logger, codec *types.Codec) types.
 	return &TMClient{config, logger, codec}
 }
 
+func (client *TMClient) broadcastTx(funcTx func() (*ctypes.ResultBroadcastTx, error)) (err error) {
+	_, err = funcTx()
+	if err != nil {
+		for IsErrMempoolIsFull(err) {
+			client.logger.Info("[TMClient] Wait 3sec... ", "err", err)
+			time.Sleep(3 * time.Second)
+			_, err = funcTx()
+		}
+		
+		return err
+	}
+	return err
+}
+
 func (client *TMClient) BroadcastTxSync(msg *types.TxMsg) (err error) {
 	msgBytes, err := types.EncodeTxMsg(msg)
 	if err != nil {
@@ -33,10 +59,12 @@ func (client *TMClient) BroadcastTxSync(msg *types.TxMsg) (err error) {
 		return err
 	}
 	
-	_, err = core.BroadcastTxSync(&rpctypes.Context{}, msgBytes)
-	if err != nil {
+	err = client.broadcastTx( func() (*ctypes.ResultBroadcastTx, error) {
+		return core.BroadcastTxSync(&rpctypes.Context{}, msgBytes)
+	})
+	
+	if err != nil  && IsErrTxInCache(err) {
 		client.logger.Error("[TMClient] BroadcastTxSync ", err)
-		return err
 	}
 	return err
 }
@@ -48,10 +76,12 @@ func (client *TMClient) BroadcastTxAsync(msg *types.TxMsg) (err error) {
 		return err
 	}
 	
-	_, err = core.BroadcastTxAsync(&rpctypes.Context{}, msgBytes)
-	if err != nil {
+	err = client.broadcastTx( func() (*ctypes.ResultBroadcastTx, error) {
+		return core.BroadcastTxAsync(&rpctypes.Context{}, msgBytes)
+	})
+	
+	if err != nil && IsErrTxInCache(err){
 		client.logger.Error("[TMClient] BroadcastTxAsync", err)
-		return err
 	}
 	return err
 }
@@ -64,9 +94,9 @@ func (client *TMClient) BroadcastTxCommit(msg *types.TxMsg) (err error) {
 	}
 	
 	_, err = core.BroadcastTxCommit(&rpctypes.Context{}, msgBytes)
-	if err != nil {
+	
+	if err != nil  && IsErrTxInCache(err) {
 		client.logger.Error("[TMClient] BroadcastTxCommit", err)
-		return err
 	}
 	return err
 }

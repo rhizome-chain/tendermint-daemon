@@ -10,6 +10,7 @@ import (
 
 type Module interface {
 	Name() string
+	GetFactory(name string) worker.Factory
 	Factories() (facs []worker.Factory)
 	Init(config *config.Config)
 	GetConfig() types.ModuleConfig
@@ -18,6 +19,10 @@ type Module interface {
 }
 
 type BaseModule struct {
+}
+
+func (b BaseModule) GetFactory(name string) worker.Factory {
+	return nil
 }
 
 func (b BaseModule) Name() string {

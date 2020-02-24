@@ -27,6 +27,8 @@ type Repository interface {
 	GetCheckpoint(jobID string, checkpoint interface{}) error
 	PutData(space string, jobID string, topic string, rowID string, data []byte) error
 	PutObject(space string, jobID string, topic string, rowID string, data interface{}) error
+	PutDataSync(space string, jobID string, topic string, rowID string, data []byte) error
+	PutObjectSync(space string, jobID string, topic string, rowID string, data interface{}) error
 	GetData(space string, jobID string, topic string, rowID string) (data []byte, err error)
 	GetObject(space string, jobID string, topic string, rowID string, data interface{}) error
 	DeleteData(space string, jobID string, topic string, rowID string) error
