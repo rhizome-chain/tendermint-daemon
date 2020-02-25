@@ -22,9 +22,7 @@ type DataPath struct {
 
 type DataHandler func(jobID string, topic string, rowID string, value []byte) bool
 
-type CancelSubs interface {
-	Cancel()
-}
+type CancelSubs func()
 
 type Repository interface {
 	PutCheckpoint(jobID string, checkpoint interface{}) error
@@ -37,8 +35,9 @@ type Repository interface {
 	GetObject(space string, jobID string, topic string, rowID string, data interface{}) error
 	DeleteData(space string, jobID string, topic string, rowID string) error
 	GetDataWithTopic(space string, jobID string, topic string, handler DataHandler) error
-	
-	SubscribeTx(space string, jobID string, topic string, handler DataHandler) CancelSubs
+	GetDataWithTopicRange(space string, jobID string, topic string, from string, end string, handler DataHandler) error
+	// SubscribeTx async subscription
+	SubscribeTx(space string, jobID string, topic string, from string, handler DataHandler) (CancelSubs, error)
 	
 	
 	PutDataFullPath(space string, path string, data []byte) error
@@ -61,20 +60,6 @@ type Factory interface {
 	Name() string
 	Space() string
 	NewWorker(helper *Helper) (Worker, error)
-}
-
-// Proxy for worker
-type Proxy interface {
-	GetJob() job.Job
-	GetCheckpoint(checkpoint interface{}) error
-	GetData(topic string, rowID string) (data []byte, err error)
-	GetObject(topic string, rowID string, data interface{}) error
-	GetDataList(topic string, handler DataHandler) error
-	DeleteData(topic string, rowID string) error
-}
-
-type ProxyProvider interface {
-	NewWorkerProxy(jobID string) (Proxy, error)
 }
 
 // Helper ..
@@ -181,10 +166,21 @@ func (helper *Helper) GetDataList(topic string, handler DataHandler) error {
 	return helper.dao.GetDataWithTopic(helper.space, helper.ID(), topic, handler)
 }
 
+// GetDataList ..
+func (helper *Helper) GetDataListRange(topic string, from string, end string, handler DataHandler) error {
+	return helper.dao.GetDataWithTopicRange(helper.space, helper.ID(), topic, from, end, handler)
+}
+
 // DeleteData ..
 func (helper *Helper) DeleteData(topic string, rowID string) error {
 	return helper.dao.DeleteData(helper.space, helper.ID(), topic, rowID)
 }
+
+func (helper *Helper) SubscribeTx(topic string, from string, handler DataHandler) (CancelSubs, error) {
+	return helper.dao.SubscribeTx(helper.space, helper.ID(), topic, from, handler)
+}
+
+
 
 // NewWorkerProxy ..
 func (helper *Helper) NewWorkerProxy(jobID string) (Proxy, error) {

@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/rhizome-chain/tendermint-daemon/tm/events"
 	"strings"
+	
+	"github.com/google/uuid"
+	
+	"github.com/rhizome-chain/tendermint-daemon/tm/events"
 	
 	"github.com/tendermint/tendermint/libs/log"
 	
@@ -18,7 +20,7 @@ const (
 	PathCheckpoint = "chkpnt"
 	
 	// PatternPathData : data/{jobID}/{topic}
-	PatternPathJobTopicData = "data/%s/%s"
+	PatternPathJobTopicData = "%s/%s"
 )
 
 // workerDao kv store model for cluster
@@ -154,7 +156,7 @@ func (dao *workerDao) GetDataWithTopic(space string, jobID string, topic string,
 	msg := types.NewViewMsgMany(space, fullPath, "", "")
 	
 	err := dao.client.GetMany(msg, func(key []byte, value []byte) bool {
-		//fmt.Println("key=", string(key), "value=", string(value))
+		// fmt.Println("key=", string(key), "value=", string(value))
 		handler(jobID, topic, string(key), value)
 		return true
 	})
@@ -162,38 +164,89 @@ func (dao *workerDao) GetDataWithTopic(space string, jobID string, topic string,
 	return err
 }
 
-type CancelTxSubs struct {
-	eventPath types.EventPath
-	name string
-}
-
-func (e *CancelTxSubs)Cancel(){
-	events.UnsubscribeTxEvent(e.eventPath,e.name)
-}
-
 // GetDataWithTopic ..
-func (dao *workerDao) SubscribeTx(space string, jobID string, topic string, handler DataHandler) CancelSubs {
-	evtPath := events.MakeTxEventPath(space, jobID, topic)
-	name := uuid.New().String()
-	err := events.SubscribeTxEvent(evtPath, name, func(event events.TxEvent) {
-		rowID := string(event.Key)
-		data, err := dao.GetData(space,jobID,topic,rowID)
-		if err != nil {
-			dao.logger.Error("SubscribeTx - get data ", "path", evtPath, "rowID", rowID)
-		} else {
-			handler(jobID, topic, rowID, data)
-		}
+func (dao *workerDao) GetDataWithTopicRange(space string, jobID string, topic string, from string, end string, handler DataHandler) error {
+	fullPath := makeDataPath(jobID, topic)
+	msg := types.NewViewMsgMany(space, fullPath, from, end)
+	
+	err := dao.client.GetMany(msg, func(key []byte, value []byte) bool {
+		// fmt.Println("key=", string(key), "value=", string(value))
+		handler(jobID, topic, string(key), value)
+		return true
 	})
 	
-	if err != nil {
-		dao.logger.Error("SubscribeTx", err)
+	if err != nil && types.IsNoDataError(err){
 		return nil
 	}
 	
-	return &CancelTxSubs{
-		eventPath: evtPath,
-		name:      name,
+	return err
+}
+
+type CancelTxSubs struct {
+	eventPath types.EventPath
+	name      string
+}
+
+// SubscribeTx async subscription
+func (dao *workerDao) SubscribeTx(space string, jobID string, topic string, from string, handler DataHandler) (CancelSubs, error) {
+	cancel, rowID, err := dao.innerSubscribeTx(space, jobID, topic)
+	
+	if err != nil {
+		return nil, err
 	}
+	
+	firstRow := <-rowID
+	
+	err = dao.GetDataWithTopicRange(space, jobID, topic, from, firstRow, handler)
+	if err != nil {
+		return nil, err
+	}
+	
+	type delegate struct {
+		running bool
+	}
+	
+	d := &delegate{running: true}
+	
+	go func(d *delegate){
+		for d.running {
+			row := <-rowID
+			data, err := dao.GetData(space, jobID, topic, row)
+			if err != nil {
+				dao.logger.Error("SubscribeTx - get data ", "rowID", row)
+			} else {
+				handler(jobID, topic, row, data)
+			}
+		}
+	}(d)
+	
+	
+	return func() {
+		cancel()
+		d.running = false
+		dao.logger.Info(fmt.Sprintf("Cancel subscribing [worker:%s]",jobID ))
+	}, nil
+}
+
+// innerSubscribeTx ..
+func (dao *workerDao) innerSubscribeTx(space string, jobID string, topic string) (CancelSubs, chan string, error) {
+	evtPath := events.MakeTxEventPath(space, jobID, topic)
+	name := uuid.New().String()
+	
+	var rowID = make(chan string)
+	err := events.SubscribeTxEvent(evtPath, name, func(event events.TxEvent) {
+		rowID <- string(event.Key)
+	})
+	
+	if err != nil {
+		dao.logger.Error(fmt.Sprintf("WorkerDAO[%s] innerSubscribeTx",jobID), err)
+		return nil, nil, err
+	}
+	
+	return func() {
+		events.UnsubscribeTxEvent(evtPath, name)
+		dao.logger.Info(fmt.Sprintf("Unsubscribe [worker:%s] path:%s",jobID, evtPath))
+	}, rowID, nil
 }
 
 // PutDataFullPath ..
