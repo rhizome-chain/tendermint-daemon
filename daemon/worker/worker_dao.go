@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/rhizome-chain/tendermint-daemon/tm/events"
 	"strings"
 	
 	"github.com/tendermint/tendermint/libs/log"
@@ -152,12 +154,46 @@ func (dao *workerDao) GetDataWithTopic(space string, jobID string, topic string,
 	msg := types.NewViewMsgMany(space, fullPath, "", "")
 	
 	err := dao.client.GetMany(msg, func(key []byte, value []byte) bool {
-		fmt.Println("key=", string(key), "value=", string(value))
-		// handler(jobID,topic,rowID, value)
+		//fmt.Println("key=", string(key), "value=", string(value))
+		handler(jobID, topic, string(key), value)
 		return true
 	})
 	
 	return err
+}
+
+type CancelTxSubs struct {
+	eventPath types.EventPath
+	name string
+}
+
+func (e *CancelTxSubs)Cancel(){
+	events.UnsubscribeTxEvent(e.eventPath,e.name)
+}
+
+// GetDataWithTopic ..
+func (dao *workerDao) SubscribeTx(space string, jobID string, topic string, handler DataHandler) CancelSubs {
+	evtPath := events.MakeTxEventPath(space, jobID, topic)
+	name := uuid.New().String()
+	err := events.SubscribeTxEvent(evtPath, name, func(event events.TxEvent) {
+		rowID := string(event.Key)
+		data, err := dao.GetData(space,jobID,topic,rowID)
+		if err != nil {
+			dao.logger.Error("SubscribeTx - get data ", "path", evtPath, "rowID", rowID)
+		} else {
+			handler(jobID, topic, rowID, data)
+		}
+	})
+	
+	if err != nil {
+		dao.logger.Error("SubscribeTx", err)
+		return nil
+	}
+	
+	return &CancelTxSubs{
+		eventPath: evtPath,
+		name:      name,
+	}
 }
 
 // PutDataFullPath ..

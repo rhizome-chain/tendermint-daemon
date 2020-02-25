@@ -22,6 +22,10 @@ type DataPath struct {
 
 type DataHandler func(jobID string, topic string, rowID string, value []byte) bool
 
+type CancelSubs interface {
+	Cancel()
+}
+
 type Repository interface {
 	PutCheckpoint(jobID string, checkpoint interface{}) error
 	GetCheckpoint(jobID string, checkpoint interface{}) error
@@ -33,6 +37,9 @@ type Repository interface {
 	GetObject(space string, jobID string, topic string, rowID string, data interface{}) error
 	DeleteData(space string, jobID string, topic string, rowID string) error
 	GetDataWithTopic(space string, jobID string, topic string, handler DataHandler) error
+	
+	SubscribeTx(space string, jobID string, topic string, handler DataHandler) CancelSubs
+	
 	
 	PutDataFullPath(space string, path string, data []byte) error
 	PutObjectFullPath(space string, path string, data interface{}) error
