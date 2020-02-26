@@ -98,7 +98,7 @@ func (bus *EventBus) pushCommand(name string, handler EventHandler, event Event)
 }
 
 func (bus *EventBus) Publish(event Event) {
-	bus.Lock()
+	// bus.Lock()
 	
 	eventPath := event.Path()
 	
@@ -113,7 +113,7 @@ func (bus *EventBus) Publish(event Event) {
 		}
 	}
 	
-	bus.Unlock()
+	// bus.Unlock()
 }
 
 func Subscribe(scope EventScope, path EventPath, name string, handler EventHandler) error {

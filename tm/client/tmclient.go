@@ -63,7 +63,7 @@ func (client *TMClient) BroadcastTxSync(msg *types.TxMsg) (err error) {
 		return core.BroadcastTxSync(&rpctypes.Context{}, msgBytes)
 	})
 	
-	if err != nil  && IsErrTxInCache(err) {
+	if err != nil  && !IsErrTxInCache(err) {
 		client.logger.Error("[TMClient] BroadcastTxSync ", err)
 	}
 	return err
@@ -80,7 +80,7 @@ func (client *TMClient) BroadcastTxAsync(msg *types.TxMsg) (err error) {
 		return core.BroadcastTxAsync(&rpctypes.Context{}, msgBytes)
 	})
 	
-	if err != nil && IsErrTxInCache(err){
+	if err != nil && !IsErrTxInCache(err){
 		client.logger.Error("[TMClient] BroadcastTxAsync", err)
 	}
 	return err
@@ -95,7 +95,7 @@ func (client *TMClient) BroadcastTxCommit(msg *types.TxMsg) (err error) {
 	
 	_, err = core.BroadcastTxCommit(&rpctypes.Context{}, msgBytes)
 	
-	if err != nil  && IsErrTxInCache(err) {
+	if err != nil  && !IsErrTxInCache(err) {
 		client.logger.Error("[TMClient] BroadcastTxCommit", err)
 	}
 	return err
