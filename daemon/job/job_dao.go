@@ -75,7 +75,7 @@ func (dao *jobDao) GetAllMemberJobIDs() (membJobMap map[string][]string, err err
 	err = dao.client.GetMany(msg, func(key []byte, value []byte) bool {
 		jobIDs := []string{}
 		err := dao.client.UnmarshalObject(value, &jobIDs)
-		if err != nil {
+		if err != nil  && !types.IsNoDataError(err) {
 			dao.logger.Error("[ERROR-JobDao] unmarshal member jobs ", err)
 		}
 		membid := string(key)
