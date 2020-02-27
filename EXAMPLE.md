@@ -1,38 +1,78 @@
-# Example to use tendermint-daemon
+# Run Hello-world Job example
 
+## Run 4 daemon nodes on Single node
+### Init 
+```
+TMHOME=chainroot1 go run ./examples/. init --chain-id=daemon-chain --node-name=node1 \
+       --force-rewrite=true \
+       --p2p.allow_duplicate_ip=true \
+       --mempool.size=300000 \
+       --mempool.max_txs_bytes=107374182400 \
+       --mempool.max_tx_bytes=104857600 \
+       --consensus.timeout_commit=1s \
+       --daemon_api_addr=0.0.0.0:7777 \
+       --daemon_alive_threshold=4 
 
-### Init
-```
-TMHOME=chainroot1 go run ./examples/. init --chain-id=daemon-chain --node-name=node1
-TMHOME=chainroot2 go run ./examples/. init --chain-id=daemon-chain --node-name=node2
-TMHOME=chainroot3 go run ./examples/. init --chain-id=daemon-chain --node-name=node3
-```
-* In chainroot1/config/config.toml file, you should set allow_duplicate_ip true to enable to run multi nodes on the same machine
-* Copy config.toml and genesis.json and paste to chainroot2/config, chainroot3/config
-* In chainroot2 and chainroot3 /config/config.toml, change proxy_app port, laddr port, prometheus_listen_addr port to avoid port conflict
+export MASTER_ID=$(TMHOME=chainroot1 go run ./examples/. show_node_id)
+TMHOME=chainroot2 go run ./examples/. init --chain-id=daemon-chain --node-name=node2 \
+       --force-rewrite=true \
+       --rpc.laddr=tcp://127.0.0.1:16657 \
+       --p2p.allow_duplicate_ip=true \
+       --p2p.laddr="tcp://0.0.0.0:16656" \
+       --p2p.persistent_peers=${MASTER_ID}@127.0.0.1:26656 \
+       --mempool.size=300000 \
+       --mempool.max_txs_bytes=107374182400 \
+       --mempool.max_tx_bytes=104857600 \
+       --instrumentation.prometheus_listen_addr=:16660 \
+       --daemon_api_addr=0.0.0.0:7778 \
+       --daemon_alive_threshold=4
 
-### check node id
+export MASTER_ID=$(TMHOME=chainroot1 go run ./examples/. show_node_id)
+TMHOME=chainroot3 go run ./examples/. init --chain-id=daemon-chain --node-name=node3 \
+       --force-rewrite=true \
+       --rpc.laddr=tcp://127.0.0.1:17757 \
+       --p2p.allow_duplicate_ip=true \
+       --p2p.laddr="tcp://0.0.0.0:17756" \
+       --p2p.persistent_peers=${MASTER_ID}@127.0.0.1:26656 \
+       --mempool.size=300000 \
+       --mempool.max_txs_bytes=107374182400 \
+       --mempool.max_tx_bytes=104857600 \
+       --instrumentation.prometheus_listen_addr=:17760 \
+       --daemon_api_addr=0.0.0.0:7779 \
+       --daemon_alive_threshold=4
+
+export MASTER_ID=$(TMHOME=chainroot1 go run ./examples/. show_node_id)
+TMHOME=chainroot4 go run ./examples/. init --chain-id=daemon-chain --node-name=node4 \
+       --force-rewrite=true \
+       --rpc.laddr=tcp://127.0.0.1:18857 \
+       --p2p.allow_duplicate_ip=true \
+       --p2p.laddr="tcp://0.0.0.0:18856" \
+       --p2p.persistent_peers=${MASTER_ID}@127.0.0.1:26656 \
+       --mempool.size=300000 \
+       --mempool.max_txs_bytes=107374182400 \
+       --mempool.max_tx_bytes=104857600 \
+       --instrumentation.prometheus_listen_addr=:18860 \
+       --daemon_api_addr=0.0.0.0:7780 \
+       --daemon_alive_threshold=4 
+
 ```
-TMHOME=chainroot1 go run ./examples/. show_node_id
-```
+* Copy genesis.json and paste to chainroot2/config, chainroot3/config
 
 ### Run Nodes
 ``` 
-TMHOME=chainroot1 go run ./examples/. start  
-
-export MASTER_ID=$(TMHOME=chainroot1 go run ./examples/. show_node_id)
-TMHOME=chainroot2 go run ./examples/. start --p2p.persistent_peers=${MASTER_ID}@127.0.0.1:26656 --daemon.api_addr=0.0.0.0:7778
-
-export MASTER_ID=$(TMHOME=chainroot1 go run ./examples/. show_node_id)
-TMHOME=chainroot3 go run ./examples/. start --p2p.persistent_peers=${MASTER_ID}@127.0.0.1:26656 --daemon.api_addr=0.0.0.0:7779
+TMHOME=chainroot1 go run ./examples/. start 
+TMHOME=chainroot2 go run ./examples/. start 
+TMHOME=chainroot3 go run ./examples/. start 
+TMHOME=chainroot4 go run ./examples/. start
 
 ```
 
 ### Register Sample Jobs
 ``` 
-./examples/reg_jobs.sh 
+./cmd/reg_jobs.sh 
 ```
 ### Deregister Sample Jobs
 ``` 
-./examples/del_jobs.sh 
+./cmd/del_jobs.sh 
 ```
+
