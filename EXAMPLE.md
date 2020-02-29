@@ -69,10 +69,10 @@ TMHOME=chainroot4 go run ./examples/. start
 
 ### Register Sample Jobs
 ``` 
-./cmd/reg_jobs.sh 
+./examples/reg_jobs.sh 
 ```
 ### Deregister Sample Jobs
 ``` 
-./cmd/del_jobs.sh 
+./examples/del_jobs.sh 
 ```
 

@@ -17,4 +17,5 @@ type Client interface {
 	MarshalObject(ptr interface{}) ([]byte, error)
 	UnmarshalJson(bz []byte, ptr interface{}) error
 	MarshalJson(ptr interface{}) ([]byte, error)
+	CurrentBlockNumber() (block int64)
 }

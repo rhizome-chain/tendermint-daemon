@@ -27,6 +27,7 @@ type CancelSubs func()
 type Repository interface {
 	PutCheckpoint(jobID string, checkpoint interface{}) error
 	GetCheckpoint(jobID string, checkpoint interface{}) error
+	//CurrentBlockNumber() (block int64)
 	PutData(space string, jobID string, topic string, rowID string, data []byte) error
 	PutObject(space string, jobID string, topic string, rowID string, data interface{}) error
 	PutDataSync(space string, jobID string, topic string, rowID string, data []byte) error
@@ -145,6 +146,11 @@ func (helper *Helper) PutData(topic string, rowID string, data []byte) error {
 func (helper *Helper) PutDataFullPath(fullPath string, data []byte) error {
 	return helper.dao.PutDataFullPath(helper.space, fullPath, data)
 }
+
+//// CurrentBlockNumber ..
+//func (helper *Helper) CurrentBlockNumber() (block int64) {
+//	return helper.dao.CurrentBlockNumber()
+//}
 
 // PutObject ..
 func (helper *Helper) PutObject(topic string, rowID string, data interface{}) error {

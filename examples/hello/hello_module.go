@@ -9,8 +9,15 @@ import (
 	"github.com/rhizome-chain/tendermint-daemon/types"
 )
 
+
+const (
+	SpaceHello = "hello"
+)
+
+
 type Module struct {
 	factory *Factory
+	proxyFactory *ProxyFactory
 }
 
 func (e *Module) GetFactory(name string) worker.Factory {
@@ -31,6 +38,7 @@ func (e *Module) GetConfig() types.ModuleConfig {
 
 func (e *Module) Init(config *config.Config) {
 	e.factory = &Factory{}
+	e.proxyFactory = &ProxyFactory{}
 }
 
 func (e *Module) BeforeDaemonStarting(cmd *cobra.Command, dm *daemon.Daemon) {
@@ -42,7 +50,7 @@ func (e *Module) AfterDaemonStarted(dm *daemon.Daemon) {
 }
 
 func (e *Module) Factories() (facs []worker.Factory) {
-	return []worker.Factory{e.factory}
+	return []worker.Factory{e.factory,e.proxyFactory}
 }
 
 var _ daemon.Module = (*Module)(nil)

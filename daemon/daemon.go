@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"errors"
 	"fmt"
 	"time"
 	
@@ -159,6 +160,9 @@ func (dm *Daemon) NewWorkerProxy(jobID string) (worker.Proxy, error) {
 	job, err := dm.GetJobRepository().GetJob(jobID)
 	
 	if err != nil {
+		if types.IsNoDataError(err){
+			err = errors.New("Cannot find Job " + jobID)
+		}
 		return nil, err
 	}
 	

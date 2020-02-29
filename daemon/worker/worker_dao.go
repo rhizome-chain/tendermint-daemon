@@ -44,7 +44,11 @@ func (dao *workerDao) PutCheckpoint(jobID string, checkpoint interface{}) error 
 		return err
 	}
 	msg := types.NewTxMsg(types.TxSet, common.SpaceDaemon, PathCheckpoint, jobID, jobIDsBytes)
-	return dao.client.BroadcastTxSync(msg)
+	err = dao.client.BroadcastTxSync(msg)
+	if err != nil {
+		dao.logger.Error(fmt.Sprintf("[Worker - %s] PutCheckpoint %v",jobID, checkpoint), err)
+	}
+	return err
 }
 
 // GetCheckpoint  unmarshal checkpoint from json
@@ -83,6 +87,10 @@ func ParseDataPath(path string) (dataPath DataPath, err error) {
 	dataPath = DataPath{JobID: paths[0], Topic: paths[1]}
 	return dataPath, err
 }
+
+//func (dao *workerDao) CurrentBlockNumber() (block int64) {
+//	return dao.client.CurrentBlockNumber()
+//}
 
 // PutData put data to {space}
 func (dao *workerDao) PutData(space string, jobID string, topic string, rowID string, data []byte) error {
@@ -167,10 +175,17 @@ func (dao *workerDao) GetDataWithTopic(space string, jobID string, topic string,
 // GetDataWithTopic ..
 func (dao *workerDao) GetDataWithTopicRange(space string, jobID string, topic string, from string, end string, handler DataHandler) error {
 	fullPath := makeDataPath(jobID, topic)
+	
+	if len(end) >0 && from > end {
+		dao.logger.Error(fmt.Sprintf("[WorkerDao] GetDataWithTopicRange from is larger than end : from=%s, end=%s",from,end))
+		dao.logger.Error(fmt.Sprintf("          - GetDataWithTopicRange : set from=end"))
+		from = end
+	}
+	
 	msg := types.NewViewMsgMany(space, fullPath, from, end)
 	
 	err := dao.client.GetMany(msg, func(key []byte, value []byte) bool {
-		// fmt.Println("key=", string(key), "value=", string(value))
+		//fmt.Println("GetDataWithTopicRange key=", string(key), "value=", string(value))
 		handler(jobID, topic, string(key), value)
 		return true
 	})
@@ -190,14 +205,15 @@ type CancelTxSubs struct {
 // SubscribeTx async subscription
 func (dao *workerDao) SubscribeTx(space string, jobID string, topic string, from string, handler DataHandler) (CancelSubs, error) {
 	cancel, rowID, err := dao.innerSubscribeTx(space, jobID, topic)
-	
 	if err != nil {
 		return nil, err
 	}
 	
-	firstRow := <-rowID
+	lastRow := <-rowID
 	
-	err = dao.GetDataWithTopicRange(space, jobID, topic, from, firstRow, handler)
+	fmt.Println(" - WorkerDao : SubscribeTx GetDataWithTopicRange :: " , " from=",from, ",lastRow=", lastRow)
+	
+	err = dao.GetDataWithTopicRange(space, jobID, topic, from, lastRow, handler)
 	if err != nil {
 		return nil, err
 	}

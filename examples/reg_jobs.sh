@@ -8,7 +8,7 @@ curl -i \
 curl -i \
   -H "Accept: application/json" \
   -H "Content-Type:application/json" \
-  -X POST --data '{"interval":"10ms","greet":"hello 10ms" }' http://localhost:7777/v1/daemon/job/add/factory/hello-worker/jobid/fast
+  -X POST --data '{"interval":"5ms","greet":"hello 5ms" }' http://localhost:7777/v1/daemon/job/add/factory/hello-worker/jobid/fast
 
 curl -i \
   -H "Accept: application/json" \
@@ -23,7 +23,7 @@ curl -i \
 curl -i \
   -H "Accept: application/json" \
   -H "Content-Type:application/json" \
-  -X POST --data '{"interval":"0.5s","greet":"hello 0.5s" }' http://localhost:7777/v1/daemon/job/add/factory/hello-worker/jobid/hi3
+  -X POST --data '{"interval":"10ms","greet":"hello 10ms" }' http://localhost:7777/v1/daemon/job/add/factory/hello-worker/jobid/hi3
 
 curl -i \
   -H "Accept: application/json" \

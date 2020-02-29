@@ -63,7 +63,7 @@ func (client *TMClient) BroadcastTxSync(msg *types.TxMsg) (err error) {
 		return core.BroadcastTxSync(&rpctypes.Context{}, msgBytes)
 	})
 	
-	if err != nil  && !IsErrTxInCache(err) {
+	if err != nil {
 		client.logger.Error("[TMClient] BroadcastTxSync ", err)
 	}
 	return err
@@ -80,7 +80,7 @@ func (client *TMClient) BroadcastTxAsync(msg *types.TxMsg) (err error) {
 		return core.BroadcastTxAsync(&rpctypes.Context{}, msgBytes)
 	})
 	
-	if err != nil && !IsErrTxInCache(err){
+	if err != nil {
 		client.logger.Error("[TMClient] BroadcastTxAsync", err)
 	}
 	return err
@@ -284,4 +284,13 @@ func (client *TMClient) MarshalJson(ptr interface{}) (bytes []byte, err error) {
 		return nil, err
 	}
 	return bytes, err
+}
+
+func (client *TMClient) CurrentBlockNumber() (block int64) {
+	blockRes , err := core.Block(&rpctypes.Context{},nil)
+	if err != nil {
+		client.logger.Error("[TMClient] CurrentBlockNumber", err)
+		return 0
+	}
+	return blockRes.Block.Height
 }

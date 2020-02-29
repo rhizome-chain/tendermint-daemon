@@ -78,6 +78,7 @@ func (b BaseProxy) CollectAndSubscribe(topic string, from string, handler DataHa
 	if err != nil {
 		return nil, err
 	}
+	
 	b.helper.Info(fmt.Sprintf("[Proxy:%s] collect from %s to %s", b.job.ID, from, lastRow))
 	
 	cancel, err := b.SubscribeTx("in", lastRow+"!", handler)

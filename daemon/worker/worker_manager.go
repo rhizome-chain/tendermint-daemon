@@ -151,6 +151,8 @@ func (manager *Manager) SetJobs(jobs []job.Job) {
 		tempWorkers[id] = worker
 	}
 	
+	manager.logger.Info("[WorkerManager] Old running Jobs:", "jobs", tempWorkers)
+	
 	for _, job := range jobs {
 		worker := tempWorkers[job.ID]
 		if worker != nil {
@@ -168,6 +170,7 @@ func (manager *Manager) SetJobs(jobs []job.Job) {
 		
 		newWorkers[job.ID] = worker
 	}
+	
 	// 제거된 worker 종료하기
 	for id, worker := range tempWorkers {
 		worker.Stop()
@@ -176,7 +179,7 @@ func (manager *Manager) SetJobs(jobs []job.Job) {
 	
 	manager.workers = newWorkers
 	
-	manager.logger.Info("[WARN-WorkerMan] new Workers ", "count", len(newWorkers))
+	manager.logger.Info("[WorkerManager] new Workers ", "count", len(newWorkers))
 	
 	for id, worker := range manager.workers {
 		if !worker.IsStarted() {

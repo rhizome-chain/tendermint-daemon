@@ -2,7 +2,6 @@ package tm
 
 import (
 	"fmt"
-	
 	"github.com/rhizome-chain/tendermint-daemon/tm/events"
 	
 	cfg "github.com/tendermint/tendermint/config"
@@ -29,18 +28,14 @@ func NewDaemonApplication(config *cfg.Config, logger log.Logger) (dapp *DaemonAp
 
 func (app *DaemonApp) DeliverTx(req abcitypes.RequestDeliverTx) abcitypes.ResponseDeliverTx {
 	if app.isValidatorTx(req.Tx) {
-		// update validators in the merkle tree
-		// and in app.ValUpdates
 		return app.execValidatorTx(req.Tx)
 	}
-	
-	var cd uint32 = code.CodeTypeOK
 	
 	msg, err := types.DecodeTxMsg(req.Tx)
 	
 	if err != nil {
 		app.logger.Error("[DMA]DeliverTx", err)
-		cd = code.CodeTypeEncodingError
+		return abcitypes.ResponseDeliverTx{Code: code.CodeTypeEncodingError}
 	} else {
 		store := app.getSpaceStoreAny(msg.Space, msg.Path)
 		
@@ -57,14 +52,13 @@ func (app *DaemonApp) DeliverTx(req abcitypes.RequestDeliverTx) abcitypes.Respon
 			// DO NOTHING
 		default:
 			app.logger.Error("[DMA] Unknown TxMsg ", "type", msg.Type)
+			return abcitypes.ResponseDeliverTx{Code: code.CodeTypeUnknownError}
 		}
+		
+		app.IncreaseTxSize()
+		events.PublishTxEvent(*msg)
+		return abcitypes.ResponseDeliverTx{Code: code.CodeTypeOK}
 	}
-	
-	app.IncreaseTxSize()
-	
-	events.PublishTxEvent(*msg)
-	
-	return abcitypes.ResponseDeliverTx{Code: cd}
 }
 
 func (app *DaemonApp) Query(reqQuery abcitypes.RequestQuery) (resQuery abcitypes.ResponseQuery) {
