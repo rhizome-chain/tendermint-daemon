@@ -3,7 +3,7 @@ package hello
 import (
 	"encoding/json"
 	"errors"
-	"github.com/rhizomata-io/dist-daemon-tendermint/types"
+	"github.com/rhizome-chain/tendermint-daemon/types"
 	tdtypes "github.com/rhizome-chain/tendermint-daemon/types"
 	"time"
 	
