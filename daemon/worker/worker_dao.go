@@ -1,10 +1,7 @@
 package worker
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"strings"
 	
 	"github.com/google/uuid"
 	
@@ -60,32 +57,6 @@ func (dao *workerDao) GetCheckpoint(jobID string, checkpoint interface{}) error 
 	}
 	err = dao.client.UnmarshalJson(bytes, &checkpoint)
 	return err
-}
-
-func (path DataPath) String() string {
-	return makeDataPath(path.JobID, path.Topic)
-}
-
-func makeDataPath(jobID string, topic string) string {
-	return fmt.Sprintf(PatternPathJobTopicData, jobID, topic)
-}
-
-func ParseDataPathBytes(path []byte) (dataPath DataPath, err error) {
-	paths := bytes.Split(path, []byte("/"))
-	if len(paths) != 2 {
-		return dataPath, errors.New(fmt.Sprintf("Illegal DataPath format %s", path))
-	}
-	dataPath = DataPath{JobID: string(paths[0]), Topic: string(paths[1])}
-	return dataPath, err
-}
-
-func ParseDataPath(path string) (dataPath DataPath, err error) {
-	paths := strings.Split(path, "/")
-	if len(paths) != 2 {
-		return dataPath, errors.New(fmt.Sprintf("Illegal DataPath format %s", path))
-	}
-	dataPath = DataPath{JobID: paths[0], Topic: paths[1]}
-	return dataPath, err
 }
 
 //func (dao *workerDao) CurrentBlockNumber() (block int64) {
