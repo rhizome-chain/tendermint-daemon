@@ -14,13 +14,20 @@ func init() {
 	types.BasicCdc.RegisterConcrete(Member{}, "daemon/member", nil)
 }
 
+type Manager interface {
+	IsLeaderNode() bool
+	GetCluster() *Cluster
+	Start()
+}
+
 type Repository interface {
 	PutMember(member *Member) (err error)
-	GetMember(nodeID string) (member Member, err error)
+	GetMember(nodeID string) (member *Member, err error)
 	HasMember(nodeID string) (ok bool)
 	PutLeader(leader string) (err error)
 	GetLeader() (leader string, err error)
 	GetAllMembers() (members []*Member, err error)
+	GetAllMemberIDs() (memberIDs []string, err error)
 	PutHeartbeat(nodeID string, blockHeight int64) (err error)
 	GetHeartbeats(handler func(nodeid string, blockHeight int64)) (err error)
 }
@@ -127,12 +134,14 @@ func (cluster *Cluster) IsLeader() bool {
 
 // Member member info
 type Member struct {
-	NodeID    string    `json:"nodeid"`
-	Name      string    `json:"name"`
-	heartbeat int64     // transient field
-	leader    bool      // transient field
-	alive     bool      // transient field
-	local     bool      // transient field
+	NodeID    string `json:"nodeid"`
+	Name      string `json:"name"`
+	RPCAddr   string `json:"rpcAddr"`
+	APIAddr   string `json:"apiAddr"`
+	heartbeat int64 // transient field
+	leader    bool  // transient field
+	alive     bool  // transient field
+	local     bool  // transient field
 }
 
 var (
@@ -185,6 +194,6 @@ func (m *Member) Heartbeat() int64 {
 
 // String implement fmt.Stringer
 func (m *Member) String() string {
-	return strings.TrimSpace(fmt.Sprintf(`Member[%s:%s] %s alive=%t, leader=%t`,
-		m.Name, m.NodeID, m.heartbeat, m.alive, m.leader))
+	return strings.TrimSpace(fmt.Sprintf(`Member[%s:%s]{rpc=%s, api=%s, alive=%t, leader=%t}`,
+		m.Name, m.NodeID, m.RPCAddr, m.APIAddr, m.alive, m.leader))
 }

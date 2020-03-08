@@ -1,5 +1,9 @@
 package types
 
+import (
+	tmtypes "github.com/tendermint/tendermint/types"
+)
+
 // DataHandler data handler for GetMany
 type KVHandler func(key []byte, value []byte) bool
 
@@ -18,4 +22,6 @@ type Client interface {
 	UnmarshalJson(bz []byte, ptr interface{}) error
 	MarshalJson(ptr interface{}) ([]byte, error)
 	CurrentBlockNumber() (block int64)
+	GetValidators() (validators []*tmtypes.Validator)
+	GetPeerIDs() (peerIDs []string)
 }

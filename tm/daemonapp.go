@@ -48,6 +48,8 @@ func (app *DaemonApp) DeliverTx(req abcitypes.RequestDeliverTx) abcitypes.Respon
 			store.Delete(msg.Key)
 		case types.TxDeleteSync:
 			store.DeleteSync(msg.Key)
+		case types.TxDeleteByPrefix:
+			store.DeleteByPrefix(msg.Key)
 		case types.TxCommit:
 			// DO NOTHING
 		default:

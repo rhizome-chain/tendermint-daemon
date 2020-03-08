@@ -129,6 +129,18 @@ func (dao *workerDao) DeleteData(space string, jobID string, topic string, rowID
 	return err
 }
 
+// DeleteData ..
+func (dao *workerDao) DeleteDataByPrefix(space string, jobID string, topic string, prefix string) error {
+	fullPath := makeDataPath(jobID, topic)
+	msg := types.NewTxMsg(types.TxDeleteByPrefix, space, fullPath, prefix, nil)
+	err := dao.client.BroadcastTxSync(msg)
+	if err != nil {
+		dao.logger.Error("[ERROR-WorkerDao] DeleteDataByPrefix ", err)
+	}
+	
+	return err
+}
+
 // GetDataWithTopic ..
 func (dao *workerDao) GetDataWithTopic(space string, jobID string, topic string, handler DataHandler) error {
 	fullPath := makeDataPath(jobID, topic)

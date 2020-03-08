@@ -63,6 +63,10 @@ func (b BaseProxy) DeleteData(topic string, rowID string) error {
 	return b.helper.DeleteData(topic, rowID)
 }
 
+func (b BaseProxy) DeleteDataByPrefix(topic string, prefix string) error {
+	return b.helper.DeleteDataByPrefix(topic, prefix)
+}
+
 func (b BaseProxy) SubscribeTx(topic string, from string, handler DataHandler) (CancelSubs, error) {
 	return b.helper.SubscribeTx(topic, from, handler)
 }

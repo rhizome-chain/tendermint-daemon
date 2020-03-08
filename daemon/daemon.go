@@ -27,7 +27,7 @@ type Daemon struct {
 	config                common.DaemonConfig
 	modules               map[string]Module
 	spaceRegistry         types.SpaceRegistry
-	clusterManager        *cluster.Manager
+	clusterManager        cluster.Manager
 	jobManager            *job.Manager
 	workerManager         *worker.Manager
 	jobOrganizer          job.Organizer
@@ -51,10 +51,9 @@ func NewDaemon(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config c
 	dm.client = ctx.GetClient()
 	dm.id = string(dm.tmNode.NodeInfo().ID())
 	dm.spaceRegistry = spaceRegistry
-	
 	spaceRegistry.RegisterSpace(common.SpaceDaemon)
 	
-	dm.clusterManager = cluster.NewManager(ctx)
+	dm.clusterManager = cluster.NewManager2(ctx)
 	ctx.SetClusterState(dm.clusterManager.GetCluster())
 	dm.jobManager = job.NewManager(ctx)
 	dm.workerManager = worker.NewManager(ctx, spaceRegistry, dm)
@@ -103,7 +102,11 @@ func (dm *Daemon) Start() {
 	go func() {
 		dm.waitReady()
 		
-		dm.logger.Info("[Dist-Daemon] Starting Daemon...", "node_id", dm.tmNode.NodeInfo().ID())
+		dm.logger.Info("[Daemon] Starting Daemon...", "node_id", dm.tmNode.NodeInfo().ID())
+		
+		if dm.GetContext().IsValidator() {
+			dm.logger.Info("[Daemon] I'm a Validator")
+		}
 		
 		if dm.beforeStartingHandler != nil {
 			dm.beforeStartingHandler(dm)

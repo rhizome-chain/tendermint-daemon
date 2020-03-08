@@ -20,11 +20,12 @@ const (
 )
 
 const (
-	TxSet        = TxType(11)
-	TxSetSync    = TxType(12)
-	TxDelete     = TxType(21)
-	TxDeleteSync = TxType(22)
-	TxCommit     = TxType(90)
+	TxSet            = TxType(11)
+	TxSetSync        = TxType(12)
+	TxDelete         = TxType(21)
+	TxDeleteSync     = TxType(22)
+	TxDeleteByPrefix = TxType(23)
+	TxCommit         = TxType(90)
 )
 
 func TxTypeString(typ TxType) string {
@@ -33,10 +34,14 @@ func TxTypeString(typ TxType) string {
 		return "Delete"
 	case TxDeleteSync:
 		return "Delete"
+	case TxDeleteByPrefix:
+		return "DeleteAll"
 	case TxSetSync:
 		return "Set"
 	case TxSet:
 		return "Set"
+	case TxCommit:
+		return "Commit"
 	}
 	
 	return ""

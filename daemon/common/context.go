@@ -4,6 +4,7 @@ import (
 	"time"
 	
 	cfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/node"
 	
@@ -26,26 +27,34 @@ type Context interface {
 	GetConfig() DaemonConfig
 	GetClusterState() ClusterState
 	SetClusterState(state ClusterState)
+	GetPrivateValidatorPubKey() crypto.PubKey
+	CheckValidator() (ok bool)
+	IsValidator() (ok bool)
 }
 
 type DefaultContext struct {
-	tmNode       *node.Node
-	tmCfg        *cfg.Config
-	config       DaemonConfig
-	logger       log.Logger
-	client       types.Client
-	clusterState ClusterState
+	tmNode          *node.Node
+	tmCfg           *cfg.Config
+	config          DaemonConfig
+	logger          log.Logger
+	client          types.Client
+	clusterState    ClusterState
+	validatorPubKey crypto.PubKey
+	isValidator     bool
 }
 
 func NewContext(tmCfg *cfg.Config, logger log.Logger, tmNode *node.Node, config DaemonConfig) Context {
 	client := client.NewClient(tmCfg, logger, types.BasicCdc)
-	return &DefaultContext{
-		tmNode: tmNode,
-		tmCfg:  tmCfg,
-		config: config,
-		logger: logger,
-		client: client,
+	ctx := &DefaultContext{
+		tmNode:          tmNode,
+		tmCfg:           tmCfg,
+		config:          config,
+		logger:          logger,
+		client:          client,
+		validatorPubKey: tmNode.PrivValidator().GetPubKey(),
 	}
+	ctx.CheckValidator()
+	return ctx
 }
 
 var _ Context = (*DefaultContext)(nil)
@@ -78,6 +87,27 @@ func (ctx *DefaultContext) GetTMConfig() *cfg.Config {
 
 func (ctx *DefaultContext) GetConfig() DaemonConfig {
 	return ctx.config
+}
+
+func (ctx *DefaultContext) GetPrivateValidatorPubKey() crypto.PubKey {
+	return ctx.validatorPubKey
+}
+
+func (ctx *DefaultContext) CheckValidator() (ok bool) {
+	valKey := ctx.GetPrivateValidatorPubKey()
+	validators := ctx.GetClient().GetValidators()
+	for _, val := range validators {
+		if val.PubKey == valKey {
+			ok = true
+			break
+		}
+	}
+	ctx.isValidator = ok
+	return ok
+}
+
+func (ctx *DefaultContext) IsValidator() (ok bool) {
+	return ctx.isValidator
 }
 
 // Info log info

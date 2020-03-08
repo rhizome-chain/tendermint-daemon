@@ -42,11 +42,11 @@ func (dao *clusterDao) PutMember(member *Member) (err error) {
 	return dao.client.BroadcastTxSync(msg)
 }
 
-func (dao *clusterDao) GetMember(nodeID string) (member Member, err error) {
+func (dao *clusterDao) GetMember(nodeID string) (member *Member, err error) {
 	msg := types.NewViewMsgOne(common.SpaceDaemon, PathMember, nodeID)
 	
-	member = Member{}
-	err = dao.client.GetObject(msg, &member)
+	member = &Member{}
+	err = dao.client.GetObject(msg, member)
 	return member, err
 }
 
@@ -92,6 +92,14 @@ func (dao *clusterDao) GetAllMembers() (members []*Member, err error) {
 	})
 	
 	return members, err
+}
+
+func (dao *clusterDao) GetAllMemberIDs() (memberIDs []string, err error) {
+	msg := types.NewViewMsgKeys(common.SpaceDaemon, PathMember, "", "")
+	
+	memberIDs, err = dao.client.GetKeys(msg)
+	
+	return memberIDs, err
 }
 
 func (dao *clusterDao) PutHeartbeat(nodeID string, blockHeight int64) (err error) {

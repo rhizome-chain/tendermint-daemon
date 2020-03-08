@@ -3,15 +3,17 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"time"
+	
 	"github.com/tendermint/tendermint/mempool"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	"time"
 	
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/core"
 	rpctypes "github.com/tendermint/tendermint/rpc/lib/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	
 	"github.com/rhizome-chain/tendermint-daemon/tm/tmcom"
 	"github.com/rhizome-chain/tendermint-daemon/types"
@@ -30,12 +32,13 @@ type TMClient struct {
 	config *cfg.Config
 	logger log.Logger
 	codec  *types.Codec
+	ctx    *rpctypes.Context
 }
 
 var _ types.Client = (*TMClient)(nil)
 
 func NewClient(config *cfg.Config, logger log.Logger, codec *types.Codec) types.Client {
-	return &TMClient{config, logger, codec}
+	return &TMClient{config, logger, codec, &rpctypes.Context{}}
 }
 
 func (client *TMClient) broadcastTx(funcTx func() (*ctypes.ResultBroadcastTx, error)) (err error) {
@@ -59,8 +62,8 @@ func (client *TMClient) BroadcastTxSync(msg *types.TxMsg) (err error) {
 		return err
 	}
 	
-	err = client.broadcastTx( func() (*ctypes.ResultBroadcastTx, error) {
-		return core.BroadcastTxSync(&rpctypes.Context{}, msgBytes)
+	err = client.broadcastTx(func() (*ctypes.ResultBroadcastTx, error) {
+		return core.BroadcastTxSync(client.ctx, msgBytes)
 	})
 	
 	if err != nil {
@@ -76,8 +79,8 @@ func (client *TMClient) BroadcastTxAsync(msg *types.TxMsg) (err error) {
 		return err
 	}
 	
-	err = client.broadcastTx( func() (*ctypes.ResultBroadcastTx, error) {
-		return core.BroadcastTxAsync(&rpctypes.Context{}, msgBytes)
+	err = client.broadcastTx(func() (*ctypes.ResultBroadcastTx, error) {
+		return core.BroadcastTxAsync(client.ctx, msgBytes)
 	})
 	
 	if err != nil {
@@ -93,21 +96,21 @@ func (client *TMClient) BroadcastTxCommit(msg *types.TxMsg) (err error) {
 		return err
 	}
 	
-	_, err = core.BroadcastTxCommit(&rpctypes.Context{}, msgBytes)
+	_, err = core.BroadcastTxCommit(client.ctx, msgBytes)
 	
-	if err != nil  && !IsErrTxInCache(err) {
+	if err != nil && !IsErrTxInCache(err) {
 		client.logger.Error("[TMClient] BroadcastTxCommit", err)
 	}
 	return err
 }
 
 func (client *TMClient) Commit() (err error) {
-	// _, err = core.Commit(&rpctypes.Context{}, nil)
+	// _, err = core.Commit(client.ctx, nil)
 	// if err != nil {
 	// 	client.logger.Error("[TMClient] Commit : ", err)
 	// }
 	msgBytes, err := types.EncodeTxMsg(&types.TxMsg{Type: types.TxCommit, Space: tmcom.SpaceDaemonState})
-	_, err = core.BroadcastTxCommit(&rpctypes.Context{}, msgBytes)
+	_, err = core.BroadcastTxCommit(client.ctx, msgBytes)
 	if err != nil {
 		client.logger.Error("[TMClient] BroadcastTxCommit", err)
 		return err
@@ -143,7 +146,7 @@ func (client *TMClient) Query(msg *types.ViewMsg) (data []byte, err error) {
 		return data, err
 	}
 	
-	res, err := core.ABCIQuery(&rpctypes.Context{}, msg.Path, bytes.HexBytes(msgBytes), 0, false)
+	res, err := core.ABCIQuery(client.ctx, msg.Path, bytes.HexBytes(msgBytes), 0, false)
 	
 	if err != nil {
 		client.logger.Error("[TMClient] Query : ABCIQuery", err)
@@ -235,7 +238,7 @@ func (client *TMClient) GetKeys(msg *types.ViewMsg) (keys []string, err error) {
 }
 
 // func (client *TMClient) Subscribe(msg *types.ViewMsg) (keys []string, err error){
-// 	core.Subscribe(&rpctypes.Context{}, )
+// 	core.Subscribe(client.ctx, )
 // }
 
 func (client *TMClient) UnmarshalObject(bz []byte, ptr interface{}) error {
@@ -287,10 +290,38 @@ func (client *TMClient) MarshalJson(ptr interface{}) (bytes []byte, err error) {
 }
 
 func (client *TMClient) CurrentBlockNumber() (block int64) {
-	blockRes , err := core.Block(&rpctypes.Context{},nil)
+	blockRes, err := core.Block(client.ctx, nil)
 	if err != nil {
 		client.logger.Error("[TMClient] CurrentBlockNumber", err)
 		return 0
 	}
 	return blockRes.Block.Height
 }
+
+func (client *TMClient) GetValidators() (validators []*tmtypes.Validator) {
+	valRes, err := core.Validators(client.ctx,nil,0,100)
+	if err != nil {
+		client.logger.Error("[TMClient] GetValidators", err)
+	} else {
+		validators = valRes.Validators
+	}
+	return validators
+}
+
+func (client *TMClient) GetPeerIDs() (peerIDs []string) {
+	result, err := core.NetInfo(client.ctx)
+	
+	if err != nil {
+		client.logger.Error("[TMClient] GetValidators", err)
+		return peerIDs
+	}
+	
+	peerIDs = []string{}
+	
+	for _,p := range result.Peers{
+		peerIDs = append(peerIDs, string(p.NodeInfo.ID()))
+	}
+	return peerIDs
+}
+
+

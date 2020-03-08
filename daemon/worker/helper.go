@@ -130,6 +130,11 @@ func (helper *Helper) DeleteData(topic string, rowID string) error {
 	return helper.dao.DeleteData(helper.space, helper.ID(), topic, rowID)
 }
 
+// DeleteDataByPrefix ..
+func (helper *Helper) DeleteDataByPrefix(topic string, prefix string) error {
+	return helper.dao.DeleteData(helper.space, helper.ID(), topic, prefix)
+}
+
 func (helper *Helper) SubscribeTx(topic string, from string, handler DataHandler) (CancelSubs, error) {
 	return helper.dao.SubscribeTx(helper.space, helper.ID(), topic, from, handler)
 }

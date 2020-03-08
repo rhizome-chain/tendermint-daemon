@@ -95,6 +95,28 @@ func (store *Store) DeleteSync(key []byte) error {
 	return store.db.DeleteSync(keyBytes)
 }
 
+func (store *Store) DeleteByPrefix(prefix []byte) error {
+	startBytes := store.path.makeKey(prefix)
+	endBts := append(startBytes, endBytes...)
+	
+	iterator, err := store.db.Iterator(startBytes, endBts)
+	defer iterator.Close()
+	
+	if err != nil {
+		return err
+	}
+	
+	batch := store.db.NewBatch()
+	
+	for iterator.Valid() {
+		key := iterator.Key()
+		batch.Delete(key)
+		iterator.Next()
+	}
+	
+	return batch.WriteSync()
+}
+
 func (store *Store) Iterator(start, end []byte) (dbm.Iterator, error) {
 	startBytes := store.path.makeKey(start)
 	var endBts []byte
